@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.29806.167
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Bitmail", "Bitmail\Bitmail.csproj", "{08883164-B2A9-4327-A77F-2C1481A84489}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{08883164-B2A9-4327-A77F-2C1481A84489}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{08883164-B2A9-4327-A77F-2C1481A84489}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{08883164-B2A9-4327-A77F-2C1481A84489}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{08883164-B2A9-4327-A77F-2C1481A84489}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {ECAA2F7F-F06F-4A6F-ADF7-130325155A98}
+	EndGlobalSection
+EndGlobal
