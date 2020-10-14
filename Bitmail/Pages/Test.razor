@@ -1,0 +1,34 @@
+﻿@inherits TestModel
+@page "/Test"
+<h3>Test</h3>
+@if (CurrentContacts != null)
+{
+    @foreach (var item in CurrentContacts)
+    {
+        <span>Email: </span>@item.Email
+        @if (item.OrganisationContacts != null && item.OrganisationContacts.Count > 0)
+        {
+            <span>Organisations: </span>
+            foreach (var org in item.OrganisationContacts)
+            {
+                @if (org.Organisation != null)
+                {
+                    @org.Organisation.Name
+                }
+            }
+        }
+    }
+    <hr />
+    <b>Nieuw Contact</b>
+    @if (NewContact != null)
+    {
+        <EditForm Model="NewContact" OnValidSubmit="@((a)=>{ _ = ValidSubmit(); })">
+            <InputText class="form-control" @bind-Value="NewContact.Email"></InputText>
+            <button type="submit">Opslaan</button>
+        </EditForm>
+    }
+}
+else
+{
+    <span>Loading...</span>
+}
