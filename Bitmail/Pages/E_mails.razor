@@ -1,7 +1,102 @@
 ﻿@page "/e-mails"
-
+@inherits E_mailsModel
 <h3>E-mails</h3>
 
-@code {
 
+<hr />
+@if (Campaigns != null && CurrentCampaign != null)
+{
+    <select class="form-control" @onchange="(a)=> {_=OnCampaignSelected(a.Value); }">
+        <option>Selecteer een campaign</option>
+
+        @foreach (var item in Campaigns)
+        {
+            <option value="@item.Id">@((item?.Settings?.Title!=null&&item.Settings.Title!="")?item.Settings.Title:item.Id)</option>
+        }
+    </select>
+}
+@if (CurrentCampaign != null)
+{
+    @if (CurrentCampaign.Id != null)
+    {
+        <h4>CampaignContent</h4>
+        @if (CurrentCampaign.Status == "save" || CurrentCampaign.Status == "paused" || CurrentCampaign.Status == "scheduled")
+        {
+            <div class="alert-info">
+                Dit campaign kan worden gewijzigd
+            </div>
+        }
+        else
+        {
+            <div class="alert-warning">
+                Dit campaign kan niet worden gewijzigd, campaign status: @CurrentCampaign.Status
+            </div>
+
+        }
+        <div class="row">
+            <div class="col">
+
+                Recipients:
+                @if (CurrentCampaign.Recipients != null)
+                {
+                    <select @bind="CurrentCampaign.Recipients.ListId">
+                        @foreach (var item in RecipientsLists)
+                        {
+                            <option value="@item.Id">@item.Name</option>
+                        }
+                    </select>
+                }
+                @if (CurrentCampaign.Settings != null)
+                {
+                    <EditForm Model="CurrentCampaign" OnSubmit="OnEditRequest">
+                        SubjectLine: <InputText class="form-control" @bind-Value="CurrentCampaign.Settings.SubjectLine" placeholder="SubjectLine" />
+                        PreviewText: <InputText class="form-control" @bind-Value="CurrentCampaign.Settings.PreviewText" placeholder="PreviewText" />
+                        FromName: <InputText class="form-control" @bind-Value="CurrentCampaign.Settings.FromName" placeholder="FromName" />
+                        ReplyTo: <InputText class="form-control" @bind-Value="CurrentCampaign.Settings.ReplyTo" placeholder="ReplyTo" />
+
+                        Template:
+                        @if (Templates != null)
+                        {
+                            <select class="form-control" @onchange="(a)=> {_=OnTemplateSelected(a.Value); }">
+                                <option>Selecteer een template</option>
+                                @foreach (var item in Templates)
+                                {
+                                    <option value="@item.Id">@item.Name</option>
+                                }
+                            </select>
+                        }
+                        @if (SelectedTemplateContent != null)
+                        {
+                            <button class="btn btn-outline-primary" type="button" @onclick="() => { EditSelectedTemplate = !EditSelectedTemplate; }">Parameters wijzigen</button><br />
+                            @if (EditSelectedTemplate)
+                            {
+                                <h4>TemplateContent wijzigen</h4>
+
+                                @if (SelectedTemplateContent.Sections != null)
+                                {
+                                    @foreach (var item in SelectedTemplateContent.Sections)
+                                    {
+                                        <div><span>@item.Key</span> <input class="form-control" value="@item.Value" @onchange="(a) => { SectionChanged(item.Key, a.Value.ToString()); }" /></div>
+                                    }
+
+                                }
+                                else
+                                {
+                                    <span>Deze template heeft geen secties waarin parameters kunnen worden meegegeven.</span>
+                                }
+                            }
+                        }
+
+                        <button class="btn btn-outline-primary" type="submit">Campaign wijzigingen opslaan</button>
+                    </EditForm>}
+            </div>
+        </div>
+        <button class="btn btn-outline-primary" @onclick="OnSend">Campaign verzenden</button>
+        @if (Message != null)
+        {
+            <div class="alert alert-primary">
+                @Message
+            </div>
+        }
+    }
 }

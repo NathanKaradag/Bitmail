@@ -15,6 +15,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Bitmail.Areas.Identity;
 using Bitmail.Data;
+using Bitmail.Services;
 
 namespace Bitmail
 {
@@ -40,7 +41,8 @@ namespace Bitmail
             services.AddServerSideBlazor();
             services.AddScoped<AuthenticationStateProvider, RevalidatingIdentityAuthenticationStateProvider<IdentityUser>>();
             services.AddSingleton<WeatherForecastService>();
-            services.AddScoped<Bitmail.Services.DatabaseService>();
+            services.AddScoped<DatabaseService>();
+            services.AddSingleton<MailChimpService>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
