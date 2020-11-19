@@ -26,6 +26,11 @@ namespace Bitmail.Data
             builder.Entity<ContactTag>().HasKey(ct => new { ct.ContactId, ct.TagId });
             builder.Entity<ContactTag>().HasOne(ct => ct.Contact).WithMany(c => c.ContactTags).HasForeignKey(ct => ct.ContactId);
             builder.Entity<ContactTag>().HasOne(ct => ct.Tag).WithMany(t => t.ContactTags).HasForeignKey(oc => oc.TagId);
+
+            //Sets the relation between Campaigns and Tag with their foreignkeys
+            builder.Entity<CampaignTag>().HasKey(ct => new { ct.CampaignId, ct.TagId });
+            builder.Entity<CampaignTag>().HasOne(ct => ct.Campaign).WithMany(c => c.CampaignTags).HasForeignKey(ct => ct.CampaignId);
+            //In this case we only need a one way relation because we will probably never get campaigns by their tags
         }
 
         public DbSet<Contact> Contacts { get; set; }
@@ -33,5 +38,7 @@ namespace Bitmail.Data
         public DbSet<OrganisationContact> OrganisationContacts { get; set; }
         public DbSet<Organisation> Organisations { get; set; }
         public DbSet<Tag> Tags { get; set; }
+        public DbSet<Campaign> Campaigns { get; set; }
+        public DbSet<CampaignTag> CampaignTags { get; set; }
     }
 }

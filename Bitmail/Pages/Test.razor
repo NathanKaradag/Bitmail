@@ -1,34 +1,58 @@
-﻿@inherits TestModel
-@page "/Test"
+﻿@page "/Test"
+
 <h3>Test</h3>
-@if (CurrentContacts != null)
-{
-    @foreach (var item in CurrentContacts)
-    {
-        <span>Email: </span>@item.Email
-        @if (item.OrganisationContacts != null && item.OrganisationContacts.Count > 0)
+
+<div class="row">
+    <div class="col">
+        Lijst met labels:<br />
+        @foreach (var item in AllTags)
         {
-            <span>Organisations: </span>
-            foreach (var org in item.OrganisationContacts)
+            <a role="button" @onclick="@(()=>  OnTagClicked(item) )">@item.Title</a><br />
+        }
+        <button @onclick="OnNewTag">Nieuwe label aanmaken</button>
+    </div>
+    <div class="col">
+        @if (IsNewTag)
+        {
+            <b>Nieuw Label:</b>
+            <EditForm Model="CurrentTag" OnSubmit="SaveTag">
+                Title: <InputText @bind-Value="CurrentTag.Title"></InputText><br />
+                <b>Contacten:</b>
+                <div style="height:200px; overflow-y:auto">
+                    @foreach (var item in AllContacts)
+                    {
+
+                        @if (SelectedContacts != null && SelectedContacts.Contains(item.Id))
+                        {
+                            <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-check" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                                <path fill-rule="evenodd" d="M10.97 4.97a.75.75 0 0 1 1.071 1.05l-3.992 4.99a.75.75 0 0 1-1.08.02L4.324 8.384a.75.75 0 1 1 1.06-1.06l2.094 2.093 3.473-4.425a.236.236 0 0 1 .02-.022z" />
+                            </svg>
+                        }
+
+                        <a role="button" @onclick="@(()=> OnContactItemSelected(item.Id) )">@item.Email</a><br />
+                    }
+                </div>
+                <button type="submit">Opslaan</button>
+            </EditForm>
+        }
+        else
+        {
+            @if (CurrentTag != null)
             {
-                @if (org.Organisation != null)
+                <b>@CurrentTag.Title</b>
+                <p>@CurrentTag.Id</p>
+                <b>Bijbehorende contacten</b>
+                @if (CurrentTag.ContactTags != null)
                 {
-                    @org.Organisation.Name
+                <div style="height:200px; overflow-y:auto">
+                    @foreach (var ct in CurrentTag.ContactTags)
+                    {
+                        <span>@ct.Contact.Email</span><br/>
+                    }
+                </div>
                 }
+                <button @onclick="RemoveTag">Verwijderen</button>
             }
         }
-    }
-    <hr />
-    <b>Nieuw Contact</b>
-    @if (NewContact != null)
-    {
-        <EditForm Model="NewContact" OnValidSubmit="@((a)=>{ _ = ValidSubmit(); })">
-            <InputText class="form-control" @bind-Value="NewContact.Email"></InputText>
-            <button type="submit">Opslaan</button>
-        </EditForm>
-    }
-}
-else
-{
-    <span>Loading...</span>
-}
+    </div>
+</div>
