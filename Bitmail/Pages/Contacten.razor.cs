@@ -16,17 +16,21 @@ namespace Bitmail.Pages
 
         protected Contact CurrentContact { get; set; }
         protected List<Contact> AllContacts { get; set; }
-        //protected List<Tag> AllTags { get; set; }
         protected List<Organisation> AllOrganisations { get; set; }
+        protected List<Tag> AllTags { get; set; }
+
         protected bool IsNewContact { get; set; }
+
         protected List<int> SelectedOrganisations { get; set; }
-        
+        protected List<int> SelectedTags { get; set; }
+
 
         protected override async Task OnInitializedAsync()
         {
-            AllContacts = DatabaseService.DB.Contacts.Include(t => t.OrganisationContacts).ToList();
+            AllContacts = DatabaseService.DB.Contacts.Include(t => t.OrganisationContacts).Include(x => x.ContactTags).ToList();
+
             AllOrganisations = DatabaseService.DB.Organisations.ToList();
-            //AllTags = DatabaseService.DB.Tags.ToList();
+            AllTags = DatabaseService.DB.Tags.ToList();
 
             CurrentContact = new Contact();
         }
@@ -45,6 +49,17 @@ namespace Bitmail.Pages
             CurrentContact.OrganisationContacts = res;
             await DatabaseService.DB.SaveChangesAsync();
 
+
+            List<Tag> realTags = new List<Tag>();
+            foreach(var selectedTag in SelectedTags)
+            {
+                Tag existingTag = AllTags.FirstOrDefault(c => c.Id == selectedTag);
+                realTags.Add(existingTag);
+            }
+            List<ContactTag> res2 = realTags.Select(rc => new ContactTag() { Contact = CurrentContact, TagId = rc.Id, Tag = rc }).ToList();
+            CurrentContact.ContactTags = res2;
+            await DatabaseService.DB.SaveChangesAsync();
+
             AllContacts = DatabaseService.DB.Contacts.ToList();
             CurrentContact = new Contact();
             StateHasChanged();
@@ -55,12 +70,15 @@ namespace Bitmail.Pages
             IsNewContact = false;
             CurrentContact = SelectedContact;
             SelectedOrganisations = new List<int>();
+            SelectedTags = new List<int>();
         }
         protected void OnNewContact()
         {
             IsNewContact = true;
             CurrentContact = new Contact();
             SelectedOrganisations = new List<int>();
+            SelectedTags = new List<int>();
+
         }
         protected void OnOrganisationItemSelected(int id)
         {
@@ -80,6 +98,24 @@ namespace Bitmail.Pages
             StateHasChanged();
 
         }
+        protected void OnTagItemSelected(int id)
+        {
+            if (SelectedTags == null)
+            {
+                SelectedTags = new List<int>();
+            }
+
+            if (!SelectedTags.Contains(id))
+            {
+                SelectedTags.Add(id);
+            }
+            else
+            {
+                SelectedTags.Remove(id);
+            }
+            StateHasChanged();
+
+        }
         protected void RemoveContact()
         {
             DatabaseService.DB.Contacts.Remove(CurrentContact);
@@ -90,6 +126,7 @@ namespace Bitmail.Pages
 
             AllContacts = DatabaseService.DB.Contacts.Include(t => t.OrganisationContacts).ToList();
             AllOrganisations = DatabaseService.DB.Organisations.ToList();
+            AllTags = DatabaseService.DB.Tags.ToList();
         }
     }
 }
