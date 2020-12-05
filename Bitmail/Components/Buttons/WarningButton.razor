@@ -1,0 +1,19 @@
+﻿<button class="btn btn-warning" type="@Type" @onclick="OnClick">
+	@if (ChildContent != null)
+	{
+		@ChildContent
+	}
+	else
+	{
+		<span>Click</span>
+	}
+</button>
+@code {
+	[Parameter]
+	public string Type { get; set; } = "button";
+	[Parameter]
+	public RenderFragment ChildContent { get; set; }
+	[Parameter]
+
+	public EventCallback OnClick { get; set; }
+}
