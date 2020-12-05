@@ -1,0 +1,16 @@
+﻿
+<input class="form-control" placeholder="@Placeholder" value="@stringValue" @oninput="(EventArgs) => {SetValue(EventArgs.Value.ToString());OnInput.InvokeAsync(stringValue); }" />
+@code {
+
+	[Parameter]
+	public string Placeholder { get; set; }
+
+	string stringValue = "";
+
+	private void SetValue(string Value)
+	{
+		stringValue = Value;
+	}
+	[Parameter]
+	public EventCallback<string> OnInput { get; set; }
+}

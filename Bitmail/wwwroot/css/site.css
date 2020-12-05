@@ -256,3 +256,39 @@ app {
     word-break: break-all;
     background-color: #fff;
 }
+.col-nav{
+    max-width: 250px;
+}
+.list-item{
+    padding: 5px;
+    background-color: rgba(0, 0, 0, 0.1);
+    border-radius: 5px ;
+    display: block;
+    margin-bottom: 2px;
+}
+
+.editItem {
+    padding-top: 7px;
+    padding-bottom: 7px;
+    margin-top: 4px;
+    margin-bottom: 4px;
+}
+
+.editItem-small {
+    font-size: small;
+}
+
+.editItemInput-small {
+    font-size: small;
+    padding: 3px;
+    padding-left: 10px;
+}
+
+.editItemInput {
+    margin-top: 4px;
+    margin-bottom: 4px;
+}
+
+.editRow {
+    margin-bottom: 5px;
+}

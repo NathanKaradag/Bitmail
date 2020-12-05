@@ -8,6 +8,7 @@ namespace Bitmail.Models
     public class Campaign
     {
         public int Id { get; set; }
+        public string ListId { get; set; }
         public string MailChimpId { get; set; }
         public string TemplateId { get; set; }
         public string Description { get; set; }
