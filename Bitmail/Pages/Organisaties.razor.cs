@@ -15,14 +15,18 @@ namespace Bitmail.Pages
         private DatabaseService DatabaseService { get; set; }
         protected Organisation CurrentOrganisation { get; set; }
         protected List<Organisation> AllOrganisations { get; set; }
+        protected List<Organisation> Organisations { get; set; }
         protected List<Contact> AllContacts { get; set; }
+        protected List<Contact> Contacts { get; set; }
         protected bool IsNewOrganisation { get; set; }
         protected bool EditClicked { get; set; }
         protected List<int> SelectedContacts { get; set; }
         protected override async Task OnInitializedAsync()
         {
             AllOrganisations = DatabaseService.DB.Organisations.Include(o=>o.OrganisationContacts).ToList();
+            Organisations = AllOrganisations;
             AllContacts = DatabaseService.DB.Contacts.ToList();
+            Contacts = AllContacts;
             CurrentOrganisation = new Organisation();
             StateHasChanged();
         }
@@ -40,6 +44,7 @@ namespace Bitmail.Pages
             CurrentOrganisation.OrganisationContacts = res;
             await DatabaseService.DB.SaveChangesAsync();
             AllOrganisations = DatabaseService.DB.Organisations.ToList();
+            Organisations = AllOrganisations;
             CurrentOrganisation = new Organisation();
             StateHasChanged();
         }
@@ -56,6 +61,7 @@ namespace Bitmail.Pages
             IsNewOrganisation = true;
             CurrentOrganisation = new Organisation();
             SelectedContacts = new List<int>();
+            StateHasChanged();
         }
         protected void OnContactItemSelected(int id)
         {
@@ -80,8 +86,11 @@ namespace Bitmail.Pages
             CurrentOrganisation = new Organisation();
             IsNewOrganisation = true;
             StateHasChanged();
+
             AllOrganisations = DatabaseService.DB.Organisations.Include(o => o.OrganisationContacts).ToList();
+            Organisations = AllOrganisations;
             AllContacts = DatabaseService.DB.Contacts.ToList();
+
         }
         protected async Task EditOrganisation()
         {
@@ -94,12 +103,40 @@ namespace Bitmail.Pages
             List<OrganisationContact> res = realContacts.Select(rc => new OrganisationContact() { Organisation = CurrentOrganisation, ContactId = rc.Id, Contact = rc }).ToList();
             CurrentOrganisation.OrganisationContacts = res;
             await DatabaseService.DB.SaveChangesAsync();
-            StateHasChanged();
             EditClicked = false;
+            StateHasChanged();
         }
         protected void OnEditClicked()
         {
             EditClicked = true;
+        }
+        protected void OnOrganisationSearch(object value)
+        {
+            if (value != null && !string.IsNullOrEmpty(value.ToString()))
+            {
+                Organisations = AllOrganisations.Where(o =>
+                    (o.Name != null) ? o.Name.ToLower().Contains(value.ToString().ToLower()) : false).ToList();
+            }
+            else
+            {
+                Organisations = AllOrganisations;
+            }
+
+            StateHasChanged();
+        }
+        protected void OnContactSearch(object value)
+        {
+            if (value != null && !string.IsNullOrEmpty(value.ToString()))
+            {
+                Contacts = AllContacts.Where(c =>
+                    (c.Email != null) ? c.Email.ToLower().Contains(value.ToString().ToLower()) : false).ToList();
+            }
+            else
+            {
+                Contacts = AllContacts;
+            }
+
+            StateHasChanged();
         }
     }
 }
