@@ -18,12 +18,12 @@ namespace Bitmail.Pages
         protected List<Contact> AllContacts { get; set; }
         protected List<Organisation> AllOrganisations { get; set; }
         protected List<Tag> AllTags { get; set; }
-
         protected bool IsNewContact { get; set; }
-
         protected List<int> SelectedOrganisations { get; set; }
         protected List<int> SelectedTags { get; set; }
-
+        protected bool EditClicked { get; set; }
+        protected string SearchTerm { get; set; } = "";
+        protected List<Contact> FilteredContacts => AllContacts.Where(i => (i.FirstName + " " + i.LastName).ToLower().Contains(SearchTerm.ToLower())).ToList();
 
         protected override async Task OnInitializedAsync()
         {
@@ -68,6 +68,7 @@ namespace Bitmail.Pages
         protected void OnContactClicked(Contact SelectedContact)
         {
             IsNewContact = false;
+            EditClicked = false;
             CurrentContact = SelectedContact;
             SelectedOrganisations = new List<int>();
             SelectedTags = new List<int>();
@@ -124,9 +125,38 @@ namespace Bitmail.Pages
             IsNewContact = true;
             StateHasChanged();
 
-            AllContacts = DatabaseService.DB.Contacts.Include(t => t.OrganisationContacts).ToList();
+            AllContacts = DatabaseService.DB.Contacts.Include(t => t.OrganisationContacts).Include(x => x.ContactTags).ToList();
             AllOrganisations = DatabaseService.DB.Organisations.ToList();
             AllTags = DatabaseService.DB.Tags.ToList();
+        }
+        protected async Task EditContact()
+        {
+            List<Organisation> realOrganisations = new List<Organisation>();
+            foreach (var selectedOrganisation in SelectedOrganisations)
+            {
+                Organisation existingOrganisation = AllOrganisations.FirstOrDefault(c => c.Id == selectedOrganisation);
+                realOrganisations.Add(existingOrganisation);
+            }
+            List<OrganisationContact> res = realOrganisations.Select(rc => new OrganisationContact() { Contact = CurrentContact, OrganisationId = rc.Id, Organisation = rc }).ToList();
+            CurrentContact.OrganisationContacts = res;
+            await DatabaseService.DB.SaveChangesAsync();
+
+            List<Tag> realTags = new List<Tag>();
+            foreach (var selectedTag in SelectedTags)
+            {
+                Tag existingTag = AllTags.FirstOrDefault(c => c.Id == selectedTag);
+                realTags.Add(existingTag);
+            }
+            List<ContactTag> res2 = realTags.Select(rc => new ContactTag() { Contact = CurrentContact, TagId = rc.Id, Tag = rc }).ToList();
+            CurrentContact.ContactTags = res2;
+            await DatabaseService.DB.SaveChangesAsync();
+
+            StateHasChanged();
+            EditClicked = false;
+        }
+        protected void OnEditClicked()
+        {
+            EditClicked = true;
         }
     }
 }
