@@ -1,0 +1,146 @@
+﻿@page "/emails"
+@page "/emails/manage/{id}"
+@page "/emails/manage/{id}/send"
+@using Bitmail.Components
+@using Bitmail.Components.Buttons;
+<div class="row">
+    <div class="col col-nav">
+        <h3>Campaigns:</h3>
+        <hr/>
+        <SearchComponent Placeholder="Zoeken..." OnInput="OnSearch"></SearchComponent>
+        @if (Campaigns != null)
+        {
+            @foreach (var item in Campaigns)
+            {
+                <a style="cursor: pointer" class="list-item" role="button" @onclick="@(() => OnCampaignClicked(item))">@item.Title</a>
+            }
+        }
+        <PrimaryButton OnClick="OnNewCampaign">Nieuwe campaign</PrimaryButton>
+    </div>
+    <div class="col">
+
+        @if (CurrentCampaign != null)
+        {
+            <EditForm Model="CurrentCampaign" OnSubmit="@(() => _ = SaveCampaignAndSend())">
+                <div class="row">
+                    <div class="col" style="max-width: 200px;">
+                        <div class="editItem">Title:</div>
+                        <div class="editItem">Onderwerp:</div>
+                        <div class="editItem">Voorbeeldtekst:</div>
+                        <div class="editItem">Afzender:</div>
+                        <div class="editItem">Antwoord adres:</div>
+
+                    </div>
+                    <div class="col">
+                        <InputText class="form-control editItemInput" placeholder="Title" @bind-Value="CurrentCampaign.Title"/>
+                        <InputText class="form-control editItemInput" placeholder="Onderwerp" @bind-Value="CurrentCampaign.SubjectLine"/>
+                        <InputText class="form-control editItemInput" placeholder="Voorbeeldtekst" @bind-Value="CurrentCampaign.PreviewText"/>
+                        <InputText class="form-control editItemInput" placeholder="Afzender" @bind-Value="CurrentCampaign.FromName"/>
+                        <InputText class="form-control editItemInput" placeholder="Antwoord adres" @bind-Value="CurrentCampaign.ReplyTo"/>
+                    </div>
+                </div>
+                <div class="row editRow">
+                    <div class="col" style="max-width: 200px;">
+                        <div class="editItem">Labels:</div>
+                    </div>
+                    <div class="col">
+                        <div class="card pl-3 pb-3 pr-3">
+                            <div class="editItem">Labels wijzigen:</div>
+                            <div style="height:200px; overflow-y:auto">
+                                @foreach (var item in AllTags)
+                                {
+                                    <span style="cursor: pointer">
+                                        <a role="button" @onclick="@(() => OnTagItemSelected(item.Id))">
+                                            @if (SelectedTags != null && SelectedTags.Contains(item.Id))
+                                            {
+                                                <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-check-circle" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                                                    <path fill-rule="evenodd" d="M8 15A7 7 0 1 0 8 1a7 7 0 0 0 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/>
+                                                    <path fill-rule="evenodd" d="M10.97 4.97a.75.75 0 0 1 1.071 1.05l-3.992 4.99a.75.75 0 0 1-1.08.02L4.324 8.384a.75.75 0 1 1 1.06-1.06l2.094 2.093 3.473-4.425a.236.236 0 0 1 .02-.022z"/>
+                                                </svg>
+                                            }
+                                            else
+                                            {
+                                                <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-circle" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                                                    <path fill-rule="evenodd" d="M8 15A7 7 0 1 0 8 1a7 7 0 0 0 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/>
+                                                </svg>
+                                            }
+                                            <span class="pl-3">
+                                                @item.Title
+                                            </span>
+                                        </a><br/>
+                                    </span>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="row editRow">
+                    <div class="col" style="max-width: 200px;">
+                        <div class="editItem">Email sjabloon:</div>
+                        @if (AllTemplates != null)
+                        {
+                            <select class="form-control" @onchange="@((a) => { _ = OnTemplateSelected(a.Value); })" value="@CurrentCampaign.TemplateId">
+                                <option>Selecteer een template</option>
+                                @foreach (var item in AllTemplates)
+                                {
+                                    <option value="@item.Id">@item.Name</option>
+                                }
+                            </select>
+                        }
+                        @if (SelectedTemplateContent != null && SetupSending)
+                        {
+                            <button class="btn btn-outline-primary" type="button" @onclick="@(() => { EditSelectedTemplate = !EditSelectedTemplate; })">Parameters wijzigen</button>
+                        }
+                    </div>
+                    <div class="col">
+                        @if (SetupSending && EditSelectedTemplate)
+                        {
+                            <div class="card pl-3 pb-3 pr-3">
+                                <div class="editItem">Parameters wijzigen:</div>
+                                @if (SelectedTemplateContent != null)
+                                {
+                                    @if (SelectedTemplateContent.Sections != null)
+                                    {
+                                        @foreach (var item in SelectedTemplateContent.Sections)
+                                        {
+                                            <div>
+                                                <span>@item.Key</span> <input class="form-control" value="@item.Value" @onchange="@((a) => { SectionChanged(item.Key, a.Value.ToString()); })"/>
+                                            </div>
+                                        }
+                                    }
+                                    else
+                                    {
+                                        <span>Deze template heeft geen secties waarin parameters kunnen worden meegegeven.</span>
+                                    }
+                                }
+                            </div>
+                        }
+                    </div>
+
+                </div>
+
+                @if (Editing || SetupSending)
+                {
+                    <WarningButton OnClick="OnCancel"> Annuleren </WarningButton>
+                }
+                @if (Editing)
+                {
+                    <DangerButton OnClick="RemoveTag">Verwijderen</DangerButton>
+                }
+                @if (DatabaseService.DB.ChangeTracker.HasChanges() || TagsChanged)
+                {
+                    <PrimaryButton Type="submit">Opslaan</PrimaryButton>
+                }
+                @if (SetupSending)
+                {
+                    <PrimaryButton Type="submit"> Verzenden </PrimaryButton>
+                }
+                else
+                {
+                    <PrimaryButton OnClick="BeginSend"> Verzenden </PrimaryButton>
+                }
+            </EditForm>
+        }
+
+    </div>
+</div>

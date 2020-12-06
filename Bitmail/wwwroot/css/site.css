@@ -256,30 +256,39 @@ app {
     word-break: break-all;
     background-color: #fff;
 }
-
-/* MENU SCROLL BAR DING*/
-.vertical-menu {
-    width: 250px;
-    height: 1000px;
-    overflow-y: auto;
-    max-height: 750px;
-    background-color: #eee;
+.col-nav{
+    max-width: 250px;
+}
+.list-item{
+    padding: 5px;
+    background-color: rgba(0, 0, 0, 0.1);
+    border-radius: 5px ;
+    display: block;
+    margin-bottom: 2px;
 }
 
-    .vertical-menu a {
-        background-color: #eee; /* Grey background color */
-        color: black; /* Black text color */
-        display: block; /* Make the links appear below each other */
-        padding: 12px; /* Add some padding */
-        text-decoration: none; /* Remove underline from links */
-    }
+.editItem {
+    padding-top: 7px;
+    padding-bottom: 7px;
+    margin-top: 4px;
+    margin-bottom: 4px;
+}
 
+.editItem-small {
+    font-size: small;
+}
 
-        .vertical-menu a:hover {
-            background-color: #ccc; /* Dark grey background on mouse-over */
-        }
+.editItemInput-small {
+    font-size: small;
+    padding: 3px;
+    padding-left: 10px;
+}
 
-        .vertical-menu a.active {
-            background-color: #1b6ec2; /* Add a green color to the "active/current" link */
-            color: white;
-        }
+.editItemInput {
+    margin-top: 4px;
+    margin-bottom: 4px;
+}
+
+.editRow {
+    margin-bottom: 5px;
+}
