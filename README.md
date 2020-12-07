@@ -1,4 +1,4 @@
 # Bitmail
 
 Live omgeving:
-(Webapp)[hrprcwebapp.azurewebsites.net]
+[hrprcwebapp.azurewebsites.net](Webapp)
