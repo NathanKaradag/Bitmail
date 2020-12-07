@@ -1,7 +1,49 @@
 ﻿@page  "/labels"
 
 <h3>Labels</h3>
+<EditForm Model="search" OnValidSubmit="@updateKeyword">
+    <InputText id="name" @bind-Value="search.inputString" />
+    <button type="submit">Search</button>
+</EditForm>
 
-@code {
+<ul>
+    @foreach (string item in alleTags)
+    {
+        if (keyword != "" && keyword != null)
+        {
+            if (keyword == item)
+            {
+                <li>@item</li>
+            }
+        }
+        else
+        {
+            <li>@item</li>
+        }
+    }
+</ul>
 
+@code { 
+
+    protected override void OnInitialized()
+    {
+        alleTags.Add("kaas");
+        alleTags.Add("rim");
+        alleTags.Add("JA");
+    }
+
+    List<string> alleTags = new List<string>();
+    string keyword;
+
+    public class Search
+    {
+        public string inputString { get; set; }
+    }
+
+    Search search = new Search();
+
+    public void updateKeyword()
+    {
+        keyword = search.inputString;
+    }
 }
