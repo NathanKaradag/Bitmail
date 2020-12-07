@@ -1,49 +1,12 @@
 ﻿@page  "/labels"
+@using Bitmail.Models
 
 <h3>Labels</h3>
-<EditForm Model="search" OnValidSubmit="@updateKeyword">
-    <InputText id="name" @bind-Value="search.inputString" />
-    <button type="submit">Search</button>
-</EditForm>
+<input @bind-value="keyword" @bind-value:event="oninput" placeholder="Zoeken..." />
 
 <ul>
-    @foreach (string item in alleTags)
+    @foreach (Tag item in FilteredTags)
     {
-        if (keyword != "" && keyword != null)
-        {
-            if (keyword == item)
-            {
-                <li>@item</li>
-            }
-        }
-        else
-        {
-            <li>@item</li>
-        }
+      <li>@item.Title</li>
     }
 </ul>
-
-@code { 
-
-    protected override void OnInitialized()
-    {
-        alleTags.Add("kaas");
-        alleTags.Add("rim");
-        alleTags.Add("JA");
-    }
-
-    List<string> alleTags = new List<string>();
-    string keyword;
-
-    public class Search
-    {
-        public string inputString { get; set; }
-    }
-
-    Search search = new Search();
-
-    public void updateKeyword()
-    {
-        keyword = search.inputString;
-    }
-}
