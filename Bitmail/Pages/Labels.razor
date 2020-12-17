@@ -2,11 +2,11 @@
 @using Bitmail.Models
 
 <h3>Labels</h3>
-<input @bind-value="keyword" @bind-value:event="oninput" placeholder="Zoeken..." />
-
-<ul>
+<input class="form-control col-3" @bind-value="keyword" @bind-value:event="oninput" placeholder="Zoeken..." />
+<hr>
+<div class="vertical-menu">
     @foreach (Tag item in FilteredTags)
     {
-      <li>@item.Title</li>
+      <button type="button" style="width:100%;" class="btn btn-light">@item.Title</button><br />
     }
-</ul>
+</div>
