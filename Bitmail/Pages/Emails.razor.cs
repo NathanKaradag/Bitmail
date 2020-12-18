@@ -146,6 +146,7 @@ namespace Bitmail.Pages
 
 		private async Task SaveCampaignAndSend()
 		{
+			await SyncContacts();
 			if (IsNewCampaign)
 			{
 				await SaveCampaign();
@@ -163,23 +164,41 @@ namespace Bitmail.Pages
 				campPostReq.Recipients.SegmentOpts.Match = "all";
 				if (campPostReq.Recipients.SegmentOpts.Conditions == null)
 				{
-					campPostReq.Recipients.SegmentOpts.Conditions = new List<object>();
+					campPostReq.Recipients.SegmentOpts.Conditions = new List<Condition>();
 				}
+				var response = await MailChimpService.Client.Request<ListSegmentsGetRequest, ListSegmentsResponse>(new ListSegmentsGetRequest(CurrentCampaign.ListId));
+				var segments = response.Segments;
 				foreach (var item in SelectedTags)
 				{
-					Condition condition = new Condition()
+					Segment seg = segments.FirstOrDefault(s => s.Name.ToLower() == AllTags.FirstOrDefault(at => at.Id == item).Title.ToLower());
+					if (seg != null)
 					{
-						ConditionType = "StaticSegment",
-						Field = "static_segment",
-						Operator = "static_is",
-						Value = AllTags.FirstOrDefault(at => at.Id == item).Title
-					};
+						Condition condition = new Condition()
+						{
+							ConditionType = "StaticSegment",
+							Field = "static_segment",
+							Operator = "static_is",
+							Value = seg.Id.ToString()
+						};
 
-					campPostReq.Recipients.SegmentOpts.Conditions.Add(condition);
+						campPostReq.Recipients.SegmentOpts.Conditions.Add(condition);
+					}
 				}
 				try
 				{
 					CampaignResponse res1 = await MailChimpService.Client.Request<CampaignNewPostRequest, CampaignResponse>(campPostReq);
+
+					CampaignContentResponse test = await MailChimpService.Client.Request<CampaignContentEditRequest, CampaignContentResponse>(
+					new CampaignContentEditRequest(res1.Id)
+					{
+						Template = new CampaignTemplate()
+						{
+							Id = Convert.ToInt32(SelectedTemplate.Id),
+							Sections = Sections
+						}
+					});
+
+					await MailChimpService.Client.Request(new CampaignSendRequest(res1.Id));
 				}
 				catch (ResponseException responseException)
 				{
@@ -187,7 +206,7 @@ namespace Bitmail.Pages
 				}
 				catch (UnknownResponseException unknownException)
 				{
-					var response = unknownException.ResponseMessage;
+					var responseError = unknownException.ResponseMessage;
 				}
 
 				CurrentCampaign = null;
@@ -340,50 +359,58 @@ namespace Bitmail.Pages
 			Sections[key] = value;
 		}
 
-		//public async Task SyncContacts()
-		//{
-		//	try
-		//	{
-		//		var AllContacts = DatabaseService.DB.Contacts.Include(c => c.ContactTags).ToList();
-		//		List<Member> ConvertedContacts = new List<Member>();
-		//		foreach (var item in AllContacts)
-		//		{
-		//			Member newMember = new Member();
-		//			newMember.Status = "subscribed";
-		//			newMember.MergeFields = new Dictionary<string, object>();
-		//			newMember.EmailAddress = item.Email;
-		//			newMember.MergeFields = new Dictionary<string, object>()
-		//			{
-		//				{"FNAME",item.FirstName},
-		//				{"LNAME",item.LastName},
-		//			};
-
-		//			ConvertedContacts.Add(newMember);
-		//		}
-
-		//		var res1 = await MailChimpService.Client.Request<ListsGetRequest, ListsResponse>(new ListsGetRequest());
-		//		var list = res1.Lists.FirstOrDefault();
-
-		//		var res = await MailChimpService.Client.Request<BatchSubscribeUnsubscribeRequest, BatchSubscribeUnsubscribeResponse>(
-		//			new BatchSubscribeUnsubscribeRequest(list.Id)
-		//			{
-		//				Members = ConvertedContacts,
-		//				UpdateExisting = true,
-		//			});
-		//		var amountOfNewMembers = res.NewMembers;
-		//		await MailChimpService.Client.Request(new MemberTagsPostRequest("", "", new List<MailChimpWrapper.Models.Tag>() { }));
-		//	}
-		//	catch (ResponseException responseException)
-		//	{
-		//		var message = responseException.ErrorResponse.Detail;
-		//	}
-		//	catch (UnknownResponseException unknownException)
-		//	{
-		//		var response = unknownException.ResponseMessage;
-		//	}
-		//	catch (Exception e)
-		//	{
-		//	}
-		//}
+		public async Task SyncContacts()
+		{
+			try
+			{
+				var listId = configuration.GetValue<string>("MailChimpConstants:SubscriberListId");
+				var AllContacts = DatabaseService.DB.Contacts.Include(c => c.ContactTags).ToList();
+				List<Member> ConvertedContacts = new List<Member>();
+				List<(Member, List<MailChimpWrapper.Models.Tag>)> tags = new List<(Member, List<MailChimpWrapper.Models.Tag>)>();
+				foreach (var item in AllContacts)
+				{
+					Member newMember = new Member();
+					newMember.Status = "subscribed";
+					newMember.MergeFields = new Dictionary<string, object>();
+					newMember.EmailAddress = item.Email;
+					newMember.MergeFields = new Dictionary<string, object>()
+					{
+						{"FNAME",item.FirstName},
+						{"LNAME",item.LastName},
+					};
+					List<MailChimpWrapper.Models.Tag> newtags = new List<MailChimpWrapper.Models.Tag>();
+					foreach (var t in item.ContactTags)
+					{
+						newtags.Add(new MailChimpWrapper.Models.Tag() { Name = t.Tag.Title, Status = "active" });
+					}
+					tags.Add((newMember, newtags));
+					ConvertedContacts.Add(newMember);
+				}
+				var res = await MailChimpService.Client.Request<BatchSubscribeUnsubscribeRequest, BatchSubscribeUnsubscribeResponse>(
+					new BatchSubscribeUnsubscribeRequest(listId)
+					{
+						Members = ConvertedContacts,
+						UpdateExisting = true,
+					});
+				if (res.NewMembers.Length + res.UpdatedMembers.Length == ConvertedContacts.Count)
+				{
+					foreach (var ct in tags)
+					{
+						await MailChimpService.Client.Request(new MemberTagsPostRequest(listId, ct.Item1.EmailAddress, ct.Item2));
+					}
+				}
+			}
+			catch (ResponseException responseException)
+			{
+				var message = responseException.ErrorResponse.Detail;
+			}
+			catch (UnknownResponseException unknownException)
+			{
+				var response = unknownException.ResponseMessage;
+			}
+			catch (Exception e)
+			{
+			}
+		}
 	}
 }
