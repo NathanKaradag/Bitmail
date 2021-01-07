@@ -48,7 +48,7 @@ app {
         }
 
 .sidebar {
-    background-image: linear-gradient(180deg, rgb(5, 39, 103) 0%, #3a0647 70%);
+    background-color: #1861ac;
 }
 
     .sidebar .top-row {
@@ -319,3 +319,12 @@ app {
             background-color: #1b6ec2; /* Add a green color to the "active/current" link */
             color: white;
         }
+
+
+.vertical-menu-button:active, .vertical-menu-button:focus, .vertical-menu-button:target {
+    outline: none !important;
+    box-shadow: none;
+    color: #fff;
+    background-color: #1b6ec2;
+    border-color: #1861ac;
+}

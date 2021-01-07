@@ -1,6 +1,7 @@
 ﻿using Bitmail.Models;
 using Bitmail.Services;
 using Microsoft.AspNetCore.Components;
+using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -12,14 +13,120 @@ namespace Bitmail.Pages
     {
         [Inject]
         private DatabaseService DatabaseService { get; set; }
-        
-        protected override void OnInitialized()
+        protected Tag CurrentTag { get; set; }
+        protected List<Tag> AllTags { get; set; }
+        protected List<Tag> Tags { get; set; }
+        protected List<Contact> AllContacts { get; set; }
+        protected List<Contact> Contacts { get; set; }
+        protected List<int> SelectedContacts { get; set; }
+        protected bool IsNewTag { get; set; }
+        protected bool EditClicked { get; set; }
+        protected string keyword { get; set; } = "";
+        protected string SearchTerm { get; set; } = "";
+        protected List<Tag> FilteredTags => AllTags.Where(i => i.Title != null ? (i.Title).ToLower().Contains(keyword.ToLower()) : false).ToList();
+        protected override async Task OnInitializedAsync()
         {
-            alleTags = DatabaseService.DB.Tags.ToList();
+            AllContacts = DatabaseService.DB.Contacts.ToList();
+            Contacts = AllContacts;
+            AllTags = DatabaseService.DB.Tags.Include(x => x.ContactTags).ToList();
+            Tags = AllTags;
+            CurrentTag = new Tag();
+            StateHasChanged();
         }
+        protected async Task SaveTag()
+        {
+            List<Contact> realContacts = new List<Contact>();
+            foreach (var selectedContact in SelectedContacts)
+            {
+                Contact existingContact = AllContacts.FirstOrDefault(c => c.Id == selectedContact);
+                realContacts.Add(existingContact);
+            }
+            List<ContactTag> res2 = realContacts.Select(rc => new ContactTag() { Tag = CurrentTag, TagId = rc.Id, Contact = rc }).ToList();
+            CurrentTag.ContactTags = res2;
 
-        List<Tag> alleTags = new List<Tag>();
-        string keyword = "";
-        List<Tag> FilteredTags => alleTags.Where(i => (i.Title).ToLower().Contains(keyword.ToLower())).ToList();
+            DatabaseService.DB.Tags.Add(CurrentTag);
+
+            await DatabaseService.DB.SaveChangesAsync();
+            AllTags = DatabaseService.DB.Tags.ToList();
+            Tags = AllTags;
+            CurrentTag = new Tag();
+            StateHasChanged();
+        }
+        protected void OnTagClicked(Tag selectedTag)
+        {
+            IsNewTag = false;
+            EditClicked = false;
+            CurrentTag = selectedTag;
+            SelectedContacts = new List<int>();
+        }
+        protected void OnNewTag()
+        {
+            IsNewTag = true;
+            CurrentTag = new Tag();
+            SelectedContacts = new List<int>();
+            StateHasChanged();
+        }
+        protected void OnContactItemSelected(int id)
+        {
+            if (SelectedContacts == null)
+            {
+                SelectedContacts = new List<int>();
+            }
+
+            if (!SelectedContacts.Contains(id))
+            {
+                SelectedContacts.Add(id);
+            }
+            else
+            {
+                SelectedContacts.Remove(id);
+            }
+            StateHasChanged();
+        }
+        protected void RemoveTag()
+        {
+            DatabaseService.DB.Tags.Remove(CurrentTag);
+            DatabaseService.DB.SaveChanges();
+            CurrentTag = new Tag();
+            IsNewTag = true;
+            StateHasChanged();
+
+            AllContacts = DatabaseService.DB.Contacts.ToList();
+            Contacts = AllContacts;
+            AllTags = DatabaseService.DB.Tags.Include(x => x.ContactTags).ToList();
+        }
+        protected async Task EditTag()
+        {
+            List<Contact> realContacts = new List<Contact>();
+            foreach (var selectedContact in SelectedContacts)
+            {
+                Contact existingContact = AllContacts.FirstOrDefault(c => c.Id == selectedContact);
+                realContacts.Add(existingContact);
+            }
+            List<ContactTag> res2 = realContacts.Select(rc => new ContactTag() { Tag = CurrentTag, TagId = rc.Id, Contact = rc }).ToList();
+            CurrentTag.ContactTags = res2;
+
+            await DatabaseService.DB.SaveChangesAsync();
+            EditClicked = false;
+            StateHasChanged();
+        }
+        protected void OnEditClicked()
+        {
+            EditClicked = true;
+        }
+        protected void OnContactSearch(object value)
+        {
+            if (value != null && !string.IsNullOrEmpty(value.ToString()))
+            {
+                Contacts = AllContacts.Where(c =>
+                    (c.Email != null) ? c.Email.ToLower().Contains(value.ToString().ToLower()) : false).ToList();
+            }
+            else
+            {
+                Contacts = AllContacts;
+            }
+
+            StateHasChanged();
+        }
     }
 }

@@ -21,6 +21,8 @@ namespace Bitmail.Pages
         protected bool IsNewOrganisation { get; set; }
         protected bool EditClicked { get; set; }
         protected List<int> SelectedContacts { get; set; }
+        protected string keyword { get; set; } = "";
+        protected List<Organisation> FilteredTags => AllOrganisations.Where(i => i.Name != null ? (i.Name).ToLower().Contains(keyword.ToLower()) : false).ToList();
         protected override async Task OnInitializedAsync()
         {
             AllOrganisations = DatabaseService.DB.Organisations.Include(o=>o.OrganisationContacts).ToList();
