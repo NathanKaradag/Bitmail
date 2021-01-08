@@ -197,8 +197,10 @@ namespace Bitmail.Pages
 							Sections = Sections
 						}
 					});
-
 					await MailChimpService.Client.Request(new CampaignSendRequest(res1.Id));
+					CurrentCampaign.HTML = test.Html;
+					DatabaseService.DB.CampaignHistory.Add(CurrentCampaign);
+					await DatabaseService.DB.SaveChangesAsync();
 				}
 				catch (ResponseException responseException)
 				{

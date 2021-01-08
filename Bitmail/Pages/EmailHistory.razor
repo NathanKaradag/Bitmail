@@ -1,0 +1,30 @@
+﻿@page "/emails/history"
+@using Bitmail.Components
+@using Bitmail.Components.Buttons;
+
+<div class="row">
+	<div class="col col-nav">
+		<h3>Campaigns:</h3>
+		<hr />
+		@*<SearchComponent Placeholder="Zoeken..." OnInput="OnSearch"></SearchComponent>*@
+		@if (Campaigns != null)
+		{
+			@foreach (var item in Campaigns)
+			{
+				<a style="cursor: pointer" class="list-item" role="button" @onclick="@(() => OnCampaignClicked(item))">@item.Title</a>
+			}
+		}
+	</div>
+	<div class="col">
+
+		@if (CurrentCampaign != null)
+		{
+			<b>@CurrentCampaign.Title;</b>
+			@if (!string.IsNullOrEmpty(CurrentCampaign.HTML))
+			{
+
+				@((MarkupString)CurrentCampaign.HTML)
+			}
+		}
+	</div>
+</div>
