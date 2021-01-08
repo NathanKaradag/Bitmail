@@ -23,6 +23,13 @@ namespace Bitmail.Pages
 {
 	public partial class Emails
 	{
+		public enum SendingStatus
+		{
+			Done,
+			Loading,
+			Error
+		}
+
 		[Inject] private MailChimpService MailChimpService { get; set; }
 		[Inject] private NavigationManager NavigationManager { get; set; }
 		[Inject] private IConfiguration configuration { get; set; }
@@ -45,31 +52,40 @@ namespace Bitmail.Pages
 		private List<Tag> AllTags { get; set; }
 		private List<int> SelectedTags { get; set; }
 		protected string SearchedValue { get; set; }
+		protected bool SendingCampaign { get; set; }
+		protected SendingStatus EmailStatus { get; set; }
+		protected string SendMessage { get; set; }
+		protected int? LastId { get; set; }
+
+		protected async Task GetData()
+		{
+			await DatabaseService.DB.Contacts.ToListAsync();
+			await DatabaseService.DB.ContactTags.ToListAsync();
+			AllCampaigns = await DatabaseService.DB.Campaigns.Include(c => c.CampaignTags).OrderByDescending(c => c.Date).ToListAsync();
+			Campaigns = AllCampaigns;
+			AllTags = await DatabaseService.DB.Tags.ToListAsync();
+		}
 
 		protected override async Task OnInitializedAsync()
 		{
-			AllCampaigns = await DatabaseService.DB.Campaigns.Include(c => c.CampaignTags).ToListAsync();
-			Campaigns = AllCampaigns;
-			AllTags = await DatabaseService.DB.Tags.ToListAsync();
+			await GetData();
 			if (NavigationManager.Uri.ToLower().Contains("send"))
 			{
 				SetupSending = true;
 			}
 
-			if (Id != null && Id != "new")
-			{
-				var idInt = Convert.ToInt32(Id);
-				CurrentCampaign = Campaigns.FirstOrDefault(c => c.Id == idInt);
-
-				IsNewCampaign = false;
-			}
-
 			TemplatesResponse templatesResponse =
 				await MailChimpService.Client.GetRequest<TemplatesResponse>(Endpoints.Templates);
 			AllTemplates = templatesResponse.Templates;
+			if (!string.IsNullOrEmpty(Id) && Id != "new")
+			{
+				var idInt = Convert.ToInt32(Id);
+				var selectedCampaign = Campaigns.FirstOrDefault(c => c.Id == idInt);
+				await OnCampaignClicked(selectedCampaign, fromUrl: true);
+			}
 		}
 
-		private async Task OnCampaignClicked(Campaign item)
+		private async Task OnCampaignClicked(Campaign item, bool fromUrl = false)
 		{
 			IsNewCampaign = false;
 			SetupSending = false;
@@ -94,13 +110,15 @@ namespace Bitmail.Pages
 				var templateIdInt = Convert.ToInt32(CurrentCampaign.TemplateId);
 
 				SelectedTemplate = AllTemplates.FirstOrDefault(t => t.Id == templateIdInt);
+				await OnTemplateSelected(SelectedTemplate.Id);
 			}
 			else
 			{
 			}
-
-			NavigationManager.NavigateTo($"/emails/manage/{item.Id}");
-
+			if (!fromUrl)
+			{
+				NavigationManager.NavigateTo($"/emails/manage/{item.Id}");
+			}
 			StateHasChanged();
 		}
 
@@ -113,19 +131,6 @@ namespace Bitmail.Pages
 			CurrentCampaign = new Campaign();
 			SelectedTags = new List<int>();
 			StateHasChanged();
-		}
-
-		private async Task BeginSend()
-		{
-			if (CurrentCampaign != null)
-			{
-				NavigationManager.NavigateTo($"/emails/manage/{CurrentCampaign.Id}/send");
-				SetupSending = true;
-				if (CurrentCampaign != null && CurrentCampaign.TemplateId != null)
-				{
-					await OnTemplateSelected(CurrentCampaign.TemplateId);
-				}
-			}
 		}
 
 		private async Task OnCancel()
@@ -146,79 +151,112 @@ namespace Bitmail.Pages
 
 		private async Task SaveCampaignAndSend()
 		{
-			await SyncContacts();
 			if (IsNewCampaign)
 			{
 				await SaveCampaign();
-			}
-			else if (SetupSending)
-			{
-				await EditCampaign();
-				CurrentCampaign.ListId = configuration.GetValue<string>("MailChimpConstants:SubscriberListId");
-				var campPostReq = CampaignConversion.ConvertToMailChimpCampaignPost(CurrentCampaign);
-
-				if (campPostReq.Recipients.SegmentOpts == null)
-				{
-					campPostReq.Recipients.SegmentOpts = new SegmentOpts();
-				}
-				campPostReq.Recipients.SegmentOpts.Match = "all";
-				if (campPostReq.Recipients.SegmentOpts.Conditions == null)
-				{
-					campPostReq.Recipients.SegmentOpts.Conditions = new List<Condition>();
-				}
-				var response = await MailChimpService.Client.Request<ListSegmentsGetRequest, ListSegmentsResponse>(new ListSegmentsGetRequest(CurrentCampaign.ListId));
-				var segments = response.Segments;
-				foreach (var item in SelectedTags)
-				{
-					Segment seg = segments.FirstOrDefault(s => s.Name.ToLower() == AllTags.FirstOrDefault(at => at.Id == item).Title.ToLower());
-					if (seg != null)
-					{
-						Condition condition = new Condition()
-						{
-							ConditionType = "StaticSegment",
-							Field = "static_segment",
-							Operator = "static_is",
-							Value = seg.Id.ToString()
-						};
-
-						campPostReq.Recipients.SegmentOpts.Conditions.Add(condition);
-					}
-				}
-				try
-				{
-					CampaignResponse res1 = await MailChimpService.Client.Request<CampaignNewPostRequest, CampaignResponse>(campPostReq);
-
-					CampaignContentResponse test = await MailChimpService.Client.Request<CampaignContentEditRequest, CampaignContentResponse>(
-					new CampaignContentEditRequest(res1.Id)
-					{
-						Template = new CampaignTemplate()
-						{
-							Id = Convert.ToInt32(SelectedTemplate.Id),
-							Sections = Sections
-						}
-					});
-					await MailChimpService.Client.Request(new CampaignSendRequest(res1.Id));
-
-					DatabaseService.DB.CampaignHistory.Add(new CampaignHistory() { Campaign = CurrentCampaign, CampaignId = CurrentCampaign.Id, HTML = test.Html });
-					await DatabaseService.DB.SaveChangesAsync();
-				}
-				catch (ResponseException responseException)
-				{
-					var message = responseException.ErrorResponse.Detail;
-				}
-				catch (UnknownResponseException unknownException)
-				{
-					var responseError = unknownException.ResponseMessage;
-				}
-
-				CurrentCampaign = null;
-				IsNewCampaign = false;
-				Editing = false;
 			}
 			else
 			{
 				await EditCampaign();
 			}
+		}
+
+		protected async Task SendCampaign()
+		{
+			LastId = null;
+			EmailStatus = SendingStatus.Loading;
+			await SyncContacts();
+			NavigationManager.NavigateTo($"/emails/manage/{CurrentCampaign.Id}/send");
+			SetupSending = true;
+			SendMessage = null;
+			SendingCampaign = true;
+			StateHasChanged();
+			await EditCampaign();
+			CurrentCampaign.ListId = configuration.GetValue<string>("MailChimpConstants:SubscriberListId");
+			var campPostReq = CampaignConversion.ConvertToMailChimpCampaignPost(CurrentCampaign);
+
+			if (campPostReq.Recipients.SegmentOpts == null)
+			{
+				campPostReq.Recipients.SegmentOpts = new SegmentOpts();
+			}
+			campPostReq.Recipients.SegmentOpts.Match = "all";
+			if (campPostReq.Recipients.SegmentOpts.Conditions == null)
+			{
+				campPostReq.Recipients.SegmentOpts.Conditions = new List<Condition>();
+			}
+			var response = await MailChimpService.Client.Request<ListSegmentsGetRequest, ListSegmentsResponse>(new ListSegmentsGetRequest(CurrentCampaign.ListId));
+			var segments = response.Segments;
+			foreach (var item in SelectedTags)
+			{
+				Segment seg = segments.FirstOrDefault(s => s.Name.ToLower() == AllTags.FirstOrDefault(at => at.Id == item).Title.ToLower());
+				if (seg != null)
+				{
+					Condition condition = new Condition()
+					{
+						ConditionType = "StaticSegment",
+						Field = "static_segment",
+						Operator = "static_is",
+						Value = seg.Id.ToString()
+					};
+
+					campPostReq.Recipients.SegmentOpts.Conditions.Add(condition);
+				}
+			}
+			try
+			{
+				CampaignResponse res1 = await MailChimpService.Client.Request<CampaignNewPostRequest, CampaignResponse>(campPostReq);
+
+				CampaignContentResponse test = await MailChimpService.Client.Request<CampaignContentEditRequest, CampaignContentResponse>(
+				new CampaignContentEditRequest(res1.Id)
+				{
+					Template = new CampaignTemplate()
+					{
+						Id = Convert.ToInt32(SelectedTemplate.Id),
+						Sections = Sections
+					}
+				});
+				await MailChimpService.Client.Request(new CampaignSendRequest(res1.Id));
+				var selectedtags = AllTags.Where(at => SelectedTags.Any(st => st == at.Id));
+				string contacts = "";
+				string tags = "";
+				foreach (var item in selectedtags)
+				{
+					tags += $"{item.Title};";
+					foreach (var ct in item.ContactTags)
+					{
+						if (ct != null && ct.Contact != null && !string.IsNullOrEmpty(ct.Contact.Email))
+						{
+							contacts += $"{ct.Contact.Email};";
+						}
+					}
+				}
+				var cmpgnHistory=new CampaignHistory() { HTML = test.Html, Contacts = contacts, Tags = tags, Date = DateTime.UtcNow, Title = CurrentCampaign.Title, Description = CurrentCampaign.Description, SubjectLine = CurrentCampaign.SubjectLine };
+				DatabaseService.DB.CampaignHistory.Add(cmpgnHistory);
+				
+				await SaveCampaign(update: true);
+				LastId = cmpgnHistory.Id;
+				SendMessage = "Email is verzonden";
+				EmailStatus = SendingStatus.Done;
+			}
+			catch (ResponseException responseException)
+			{
+				var message = responseException.ErrorResponse.Detail;
+				SendMessage = $"Email kon niet worden verzonden: {message}";
+				EmailStatus = SendingStatus.Error;
+			}
+			catch (UnknownResponseException unknownException)
+			{
+				var responseError = unknownException.ResponseMessage;
+				SendMessage = $"Email kon niet worden verzonden: {responseError.Content}";
+				EmailStatus = SendingStatus.Error;
+			}
+			CurrentCampaign = null;
+			IsNewCampaign = false;
+			Editing = false;
+			SendingCampaign = false;
+
+			await GetData();
+			StateHasChanged();
 		}
 
 		private async Task EditCampaign()
@@ -239,9 +277,7 @@ namespace Bitmail.Pages
 			CurrentCampaign.CampaignTags.AddRange(res);
 			await DatabaseService.DB.SaveChangesAsync();
 
-			AllCampaigns = await DatabaseService.DB.Campaigns.Include(c => c.CampaignTags).ToListAsync();
-			Campaigns = AllCampaigns;
-			AllTags = await DatabaseService.DB.Tags.ToListAsync();
+			await GetData();
 		}
 
 		protected void OnCancelEdit()
@@ -268,9 +304,12 @@ namespace Bitmail.Pages
 			StateHasChanged();
 		}
 
-		private async Task SaveCampaign()
+		private async Task SaveCampaign(bool update = false)
 		{
-			DatabaseService.DB.Campaigns.Add(CurrentCampaign);
+			if (!update)
+			{
+				DatabaseService.DB.Campaigns.Add(CurrentCampaign);
+			}
 			List<Tag> realTags = new List<Tag>();
 			foreach (var selectedTag in SelectedTags)
 			{
@@ -281,11 +320,10 @@ namespace Bitmail.Pages
 			List<CampaignTag> res = realTags.Select(rc => new CampaignTag()
 			{ Tag = rc, CampaignId = rc.Id, Campaign = CurrentCampaign }).ToList();
 			CurrentCampaign.CampaignTags = res;
+			CurrentCampaign.Date = DateTime.UtcNow;
 			await DatabaseService.DB.SaveChangesAsync();
 
-			AllCampaigns = await DatabaseService.DB.Campaigns.Include(c => c.CampaignTags).ToListAsync();
-			Campaigns = AllCampaigns;
-			AllTags = await DatabaseService.DB.Tags.ToListAsync();
+			await GetData();
 			CurrentCampaign = null;
 			IsNewCampaign = false;
 
@@ -318,36 +356,45 @@ namespace Bitmail.Pages
 			DatabaseService.DB.SaveChanges();
 			CurrentCampaign = new Campaign();
 			IsNewCampaign = true;
-			AllCampaigns = DatabaseService.DB.Campaigns.Include(c => c.CampaignTags).ToList();
-			Campaigns = AllCampaigns;
-			AllTags = DatabaseService.DB.Tags.ToList();
+			_ = GetData();
 			StateHasChanged();
 		}
 
 		public async Task OnTemplateSelected(object val)
 		{
-			if (AllTemplates.FirstOrDefault(a => a.Id == Convert.ToInt32(val)) != null)
+			if (val.ToString() != "None")
 			{
-				try
+				if (AllTemplates.FirstOrDefault(a => a.Id == Convert.ToInt32(val)) != null)
 				{
-					SelectedTemplateContent =
-						await MailChimpService.Client.Request<TemplateContentGetRequest, TemplateContentResponse>(
-							new TemplateContentGetRequest(Convert.ToInt32(val)));
-					var templateIdInt = Convert.ToInt32(val);
-
-					if (SelectedTemplate == null)
+					try
 					{
-						SelectedTemplate = AllTemplates.FirstOrDefault(t => t.Id == templateIdInt);
+						SelectedTemplateContent =
+							await MailChimpService.Client.Request<TemplateContentGetRequest, TemplateContentResponse>(
+								new TemplateContentGetRequest(Convert.ToInt32(val)));
+						var templateIdInt = Convert.ToInt32(val);
+
+						if (SelectedTemplate == null)
+						{
+							SelectedTemplate = AllTemplates.FirstOrDefault(t => t.Id == templateIdInt);
+						}
+
+						if (CurrentCampaign != null)
+						{
+							if (SelectedTemplate != null)
+								CurrentCampaign.TemplateId = SelectedTemplate.Id.ToString();
+						}
 					}
-
-					if (CurrentCampaign != null)
+					catch (Exception e)
 					{
-						if (SelectedTemplate != null)
-							CurrentCampaign.TemplateId = SelectedTemplate.Id.ToString();
 					}
 				}
-				catch (Exception e)
+			}
+			else
+			{
+				if (CurrentCampaign != null)
 				{
+					CurrentCampaign.TemplateId = null;
+					SelectedTemplateContent = null;
 				}
 			}
 
