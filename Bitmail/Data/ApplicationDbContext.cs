@@ -40,6 +40,6 @@ namespace Bitmail.Data
 		public DbSet<Tag> Tags { get; set; }
 		public DbSet<Campaign> Campaigns { get; set; }
 		public DbSet<CampaignTag> CampaignTags { get; set; }
-		public DbSet<Campaign> CampaignHistory { get; set; }
+		public DbSet<CampaignHistory> CampaignHistory { get; set; }
 	}
 }

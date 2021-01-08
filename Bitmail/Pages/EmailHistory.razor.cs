@@ -13,14 +13,14 @@ namespace Bitmail.Pages
 	{
 		[Inject] private DatabaseService DatabaseService { get; set; }
 		private Campaign CurrentCampaign { get; set; }
-		private List<Campaign> Campaigns { get; set; }
+		private List<CampaignHistory> Campaigns { get; set; }
 
 		protected override async Task OnInitializedAsync()
 		{
 			Campaigns = await DatabaseService.DB.CampaignHistory.ToListAsync();
 		}
 
-		private async Task OnCampaignClicked(Campaign item)
+		private async Task OnCampaignClicked(CampaignHistory item)
 		{
 		}
 	}

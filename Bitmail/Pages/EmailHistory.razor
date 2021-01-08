@@ -11,7 +11,7 @@
 		{
 			@foreach (var item in Campaigns)
 			{
-				<a style="cursor: pointer" class="list-item" role="button" @onclick="@(() => OnCampaignClicked(item))">@item.Title</a>
+				<a style="cursor: pointer" class="list-item" role="button" @onclick="@(() => OnCampaignClicked(item))">@item.Campaign.Title</a>
 			}
 		}
 	</div>
