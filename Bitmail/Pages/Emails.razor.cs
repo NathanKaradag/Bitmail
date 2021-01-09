@@ -230,9 +230,10 @@ namespace Bitmail.Pages
 						}
 					}
 				}
-				var cmpgnHistory=new CampaignHistory() { HTML = test.Html, Contacts = contacts, Tags = tags, Date = DateTime.UtcNow, Title = CurrentCampaign.Title, Description = CurrentCampaign.Description, SubjectLine = CurrentCampaign.SubjectLine };
+
+				var cmpgnHistory = new CampaignHistory() { MailChimpId = res1.Id, HTML = test.Html, Contacts = contacts, Tags = tags, Date = DateTime.UtcNow, Title = CurrentCampaign.Title, Description = CurrentCampaign.Description, SubjectLine = CurrentCampaign.SubjectLine };
 				DatabaseService.DB.CampaignHistory.Add(cmpgnHistory);
-				
+
 				await SaveCampaign(update: true);
 				LastId = cmpgnHistory.Id;
 				SendMessage = "Email is verzonden";

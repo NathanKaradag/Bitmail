@@ -8,6 +8,7 @@ namespace Bitmail.Models
 	public class CampaignHistory
 	{
 		public int Id { get; set; }
+		public string MailChimpId { get; set; }
 		public string Title { get; set; }
 		public string Description { get; set; }
 		public string SubjectLine { get; set; }
