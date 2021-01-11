@@ -96,31 +96,33 @@ namespace Bitmail.Pages
 			{
 				DatabaseService.DB.Entry(CurrentCampaign).Reload();
 			}
-
-			CurrentCampaign = item;
-			Editing = true;
-			SelectedTags = new List<int>();
-			foreach (var tag in CurrentCampaign.CampaignTags)
+			if (item != null)
 			{
-				SelectedTags.Add(tag.TagId);
-			}
-
-			if (CurrentCampaign.TemplateId != null)
-			{
-				var templateIdInt = Convert.ToInt32(CurrentCampaign.TemplateId);
-
-				SelectedTemplate = AllTemplates.FirstOrDefault(t => t.Id == templateIdInt);
-				if (SelectedTemplate != null)
+				CurrentCampaign = item;
+				Editing = true;
+				SelectedTags = new List<int>();
+				foreach (var tag in CurrentCampaign.CampaignTags)
 				{
-					await OnTemplateSelected(SelectedTemplate.Id);
+					SelectedTags.Add(tag.TagId);
 				}
-			}
-			else
-			{
-			}
-			if (!fromUrl)
-			{
-				NavigationManager.NavigateTo($"/emails/manage/{item.Id}");
+
+				if (CurrentCampaign.TemplateId != null)
+				{
+					var templateIdInt = Convert.ToInt32(CurrentCampaign.TemplateId);
+
+					SelectedTemplate = AllTemplates.FirstOrDefault(t => t.Id == templateIdInt);
+					if (SelectedTemplate != null)
+					{
+						await OnTemplateSelected(SelectedTemplate.Id);
+					}
+				}
+				else
+				{
+				}
+				if (!fromUrl)
+				{
+					NavigationManager.NavigateTo($"/emails/manage/{item.Id}");
+				}
 			}
 			StateHasChanged();
 		}
