@@ -184,7 +184,7 @@ namespace Bitmail.Pages
 			{
 				campPostReq.Recipients.SegmentOpts.Conditions = new List<Condition>();
 			}
-			var response = await MailChimpService.Client.Request<ListSegmentsGetRequest, ListSegmentsResponse>(new ListSegmentsGetRequest(CurrentCampaign.ListId));
+			var response = await MailChimpService.Client.Request<ListSegmentsGetRequest, ListSegmentsResponse>(new ListSegmentsGetRequest(CurrentCampaign.ListId, "?count=1000"));
 			var segments = response.Segments;
 			foreach (var item in SelectedTags)
 			{
