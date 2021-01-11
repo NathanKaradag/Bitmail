@@ -2,6 +2,7 @@
 @using Bitmail.Models;
 @using Bitmail.Components
 @using Bitmail.Components.Buttons;
+@attribute [Authorize]
 
 <h3>Organisaties</h3>
 <input class="form-control col-3" @bind-value="keyword" @bind-value:event="oninput" placeholder="Zoeken..." />
