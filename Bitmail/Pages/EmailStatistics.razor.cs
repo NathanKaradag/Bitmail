@@ -22,7 +22,7 @@ namespace Bitmail.Pages
 
 		protected override async Task OnInitializedAsync()
 		{
-			Campaigns = await DatabaseService.DB.CampaignHistory.OrderByDescending(ch=>ch.Date).Take(10).ToListAsync();
+			Campaigns = await DatabaseService.DB.CampaignHistory.OrderByDescending(ch => ch.Date).Take(10).ToListAsync();
 
 			//Discard the call so it disconnects from the main thread and runs asynchronously
 			_ = GetReports(Campaigns);
@@ -39,20 +39,23 @@ namespace Bitmail.Pages
 						CampaignReportResponse resp = await MailChimpService.Client.Request<CampaignReportGetRequest, CampaignReportResponse>(new CampaignReportGetRequest(item.MailChimpId));
 						if (resp != null)
 						{
-							ReportsPerCampaign[item.MailChimpId] = new ReportData() { Clicks = resp.Clicks, Opens=resp.Opens, Bounces = resp.Bounces, Forwards = resp.Forwards, Title = resp.CampaignTitle, EmailsSent = resp.EmailsSent, SentTime = resp.SendTime };
+							ReportsPerCampaign[item.MailChimpId] = new ReportData() { Clicks = resp.Clicks, Opens = resp.Opens, Bounces = resp.Bounces, Forwards = resp.Forwards, Title = resp.CampaignTitle, EmailsSent = resp.EmailsSent, SentTime = resp.SendTime };
 							StateHasChanged();
 						}
 					}
 					catch (ResponseException responseException)
 					{
 						var message = responseException.ErrorResponse.Detail;
+						ReportsPerCampaign[item.MailChimpId] = new ReportData() { Error = true };
 					}
 					catch (UnknownResponseException unknownException)
 					{
 						var response = unknownException.ResponseMessage;
+						ReportsPerCampaign[item.MailChimpId] = new ReportData() { Error = true };
 					}
 					catch (Exception e)
 					{
+						ReportsPerCampaign[item.MailChimpId] = new ReportData() { Error = true };
 					}
 					StateHasChanged();
 				}
@@ -68,6 +71,7 @@ namespace Bitmail.Pages
 			public Opens Opens { get; set; }
 			public int EmailsSent { get; set; }
 			public string SentTime { get; set; }
+			public bool Error { get; set; }
 		}
 	}
 }

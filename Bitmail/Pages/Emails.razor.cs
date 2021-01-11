@@ -110,7 +110,10 @@ namespace Bitmail.Pages
 				var templateIdInt = Convert.ToInt32(CurrentCampaign.TemplateId);
 
 				SelectedTemplate = AllTemplates.FirstOrDefault(t => t.Id == templateIdInt);
-				await OnTemplateSelected(SelectedTemplate.Id);
+				if (SelectedTemplate != null)
+				{
+					await OnTemplateSelected(SelectedTemplate.Id);
+				}
 			}
 			else
 			{
@@ -374,10 +377,7 @@ namespace Bitmail.Pages
 								new TemplateContentGetRequest(Convert.ToInt32(val)));
 						var templateIdInt = Convert.ToInt32(val);
 
-						if (SelectedTemplate == null)
-						{
-							SelectedTemplate = AllTemplates.FirstOrDefault(t => t.Id == templateIdInt);
-						}
+						SelectedTemplate = AllTemplates.FirstOrDefault(t => t.Id == templateIdInt);
 
 						if (CurrentCampaign != null)
 						{

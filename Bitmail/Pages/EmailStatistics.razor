@@ -18,7 +18,7 @@
 			{
 				<tr>
 					<th scope="row">@item.Title</th>
-					@if (!string.IsNullOrEmpty(item.MailChimpId) && ReportsPerCampaign != null && ReportsPerCampaign.ContainsKey(item.MailChimpId))
+					@if (!string.IsNullOrEmpty(item.MailChimpId) && ReportsPerCampaign != null && ReportsPerCampaign.ContainsKey(item.MailChimpId) && !ReportsPerCampaign[item.MailChimpId].Error)
 					{
 
 						<td>@ReportsPerCampaign[item.MailChimpId].Clicks.ClicksTotal</td>
@@ -27,7 +27,7 @@
 						<td>@DateTime.Parse(ReportsPerCampaign[item.MailChimpId].SentTime).ToString("dd/MM/yyyy HH:mm:ss")</td>
 
 					}
-					else if (string.IsNullOrEmpty(item.MailChimpId))
+					else if (string.IsNullOrEmpty(item.MailChimpId) || (ReportsPerCampaign.ContainsKey(item.MailChimpId) && ReportsPerCampaign[item.MailChimpId].Error))
 					{
 
 						<td>...</td>
