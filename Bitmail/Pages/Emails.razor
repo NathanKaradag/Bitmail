@@ -3,6 +3,7 @@
 @page "/emails/manage/{id}/send"
 @using Bitmail.Components
 @using Bitmail.Components.Buttons;
+@attribute [Authorize]
 <div class="row">
 	<div class="col col-nav">
 		<h3>Campagnes:</h3>
@@ -22,8 +23,6 @@
 							@item.Date.ToString("dd/MM")
 						</div>
 					</div>
-
-
 				</a>
 			}
 		}

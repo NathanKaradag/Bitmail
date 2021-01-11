@@ -2,7 +2,7 @@
 @page "/emails/history/{id}"
 @using Bitmail.Components
 @using Bitmail.Components.Buttons;
-
+@attribute [Authorize]
 <div class="row">
 	<div class="col col-nav">
 		<h3>Campagne historie:</h3>
@@ -15,15 +15,13 @@
 				<a style="cursor: pointer" class="list-item" role="button" @onclick="@(() => OnCampaignClicked(item))">
 					<div class="row m-0">
 
-					<div class="col-9 p-0" style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
-						@item.Title
+						<div class="col-9 p-0" style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+							@item.Title
+						</div>
+						<div class="col-3 p-0" style=" text-align:right; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+							@item.Date.ToString("dd/MM")
+						</div>
 					</div>
-					<div class="col-3 p-0" style=" text-align:right; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
-						@item.Date.ToString("dd/MM")
-					</div>
-					</div>
-
-
 				</a>
 			}
 		}

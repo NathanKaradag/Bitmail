@@ -22,7 +22,7 @@ namespace Bitmail.Pages
 
 		protected override async Task OnInitializedAsync()
 		{
-			Campaigns = await DatabaseService.DB.CampaignHistory.OrderByDescending(ch=>ch.Date).ToListAsync();
+			Campaigns = await DatabaseService.DB.CampaignHistory.OrderByDescending(ch=>ch.Date).Take(10).ToListAsync();
 
 			//Discard the call so it disconnects from the main thread and runs asynchronously
 			_ = GetReports(Campaigns);
@@ -39,7 +39,7 @@ namespace Bitmail.Pages
 						CampaignReportResponse resp = await MailChimpService.Client.Request<CampaignReportGetRequest, CampaignReportResponse>(new CampaignReportGetRequest(item.MailChimpId));
 						if (resp != null)
 						{
-							ReportsPerCampaign[item.MailChimpId] = new ReportData() { Clicks = resp.Clicks, Bounces = resp.Bounces, Forwards = resp.Forwards, Title = resp.CampaignTitle, EmailsSent = resp.EmailsSent, SentTime = resp.SendTime };
+							ReportsPerCampaign[item.MailChimpId] = new ReportData() { Clicks = resp.Clicks, Opens=resp.Opens, Bounces = resp.Bounces, Forwards = resp.Forwards, Title = resp.CampaignTitle, EmailsSent = resp.EmailsSent, SentTime = resp.SendTime };
 							StateHasChanged();
 						}
 					}
@@ -65,6 +65,7 @@ namespace Bitmail.Pages
 			public Clicks Clicks { get; set; }
 			public Bounces Bounces { get; set; }
 			public Forwards Forwards { get; set; }
+			public Opens Opens { get; set; }
 			public int EmailsSent { get; set; }
 			public string SentTime { get; set; }
 		}
