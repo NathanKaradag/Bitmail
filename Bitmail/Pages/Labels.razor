@@ -29,13 +29,10 @@
                     <b>Nieuwe Label:</b><br />
                     <b>Naam: </b><br /><InputText class="form-control editItemInput" placeholder="Naam" @bind-Value="CurrentTag.Title"></InputText>
                     <ValidationMessage For="@(() => CurrentTag.Title)" />
-
-                    <b>MailChimpTagId: </b><br /><InputTextArea class="form-control editItemInput" placeholder="MailChimpId" @bind-Value="CurrentTag.MailChimpTagId"></InputTextArea>
-                    <ValidationMessage For="@(() => CurrentTag.MailChimpTagId)" />
-
+                    
                     <b>Contacten:</b>
                     <SearchComponent Placeholder="Zoeken..." OnInput="OnContactSearch"></SearchComponent>
-                    <div style="height: 410px; max-height:410px; overflow-y:auto; background-color:#eee;">
+                    <div style="height: 510px; max-height:510px; overflow-y:auto; background-color:#eee;">
                         @foreach (var item in Contacts)
                         {
                             <span style="cursor: pointer">
@@ -75,8 +72,7 @@
                 {
                     <div style="height:660px; max-height:100%;">
                         <b>@CurrentTag.Title</b>
-                        <p>@CurrentTag.MailChimpTagId</p>
-
+                        
                         <div style="height: 200px; overflow-y:auto">
                             <b>Bijbehorende contacten: </b><br>
                             @foreach (var oc in CurrentTag.ContactTags)
@@ -98,13 +94,11 @@
                             <DataAnnotationsValidator />
                             <b>Naam: </b><br /><InputText class="form-control editItemInput" placeholder="Naam" @bind-Value="CurrentTag.Title"></InputText>
                             <ValidationMessage For="@(() => CurrentTag.Title)" />
-
-                            <b>MailChimpId: </b><br /><InputTextArea class="form-control editItemInput" placeholder="MailChimpId" @bind-Value="CurrentTag.MailChimpTagId"></InputTextArea>
-                            <ValidationMessage For="@(() => CurrentTag.MailChimpTagId)" />
+                                                        
                             <b>Contacten: </b>
                             <SearchComponent Placeholder="Zoeken..." OnInput="OnContactSearch"></SearchComponent>
 
-                            <div style="height: 410px; max-height:410px; overflow-y:auto; background-color:#eee;">
+                            <div style="height: 510px; max-height:510px; overflow-y:auto; background-color:#eee;">
                                 @foreach (var item in Contacts)
                                 {
                                     <span style="cursor: pointer">
