@@ -32,65 +32,66 @@
                     <ValidationMessage For="@(() => CurrentContact.FirstName)" />
                     <b>E-mail: </b><br /><InputText class="form-control editItemInput" placeholder="E-mail" @bind-Value="CurrentContact.Email"></InputText>
                     <ValidationMessage For="@(() => CurrentContact.FirstName)" />
-
-                    <div style="float:left; width:650px;">
-                        <b>Organisatie(s):</b>
-                        <SearchComponent Placeholder="Zoeken..." OnInput="OnOrganisationSearch"></SearchComponent>
-                        <div style="height: 360px; max-height:360px; overflow-y:auto; background-color:#eee;">
-                            @foreach (var item in Organisations)
-                            {
-                                <span style="cursor: pointer">
-                                    <a role="button" style="width:100%; border-radius:0px; text-align:left" class="btn btn-light" @onclick="@(() => OnOrganisationItemSelected(item.Id))">
-                                        @if (SelectedOrganisations != null && SelectedOrganisations.Contains(item.Id))
-                                        {
-                                            <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-check-circle" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
-                                                <path fill-rule="evenodd" d="M8 15A7 7 0 1 0 8 1a7 7 0 0 0 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z" />
-                                                <path fill-rule="evenodd" d="M10.97 4.97a.75.75 0 0 1 1.071 1.05l-3.992 4.99a.75.75 0 0 1-1.08.02L4.324 8.384a.75.75 0 1 1 1.06-1.06l2.094 2.093 3.473-4.425a.236.236 0 0 1 .02-.022z" />
-                                            </svg>
-                                        }
-                                        else
-                                        {
-                                            <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-circle" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
-                                                <path fill-rule="evenodd" d="M8 15A7 7 0 1 0 8 1a7 7 0 0 0 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z" />
-                                            </svg>
-                                        }
-                                        <span class="pl-3">
-                                            @item.Name
-                                        </span>
-                                    </a><br />
-                                </span>
-                            }
+                    <div class="row">
+                        <div class="col-md">
+                            <b>Organisatie(s):</b>
+                            <SearchComponent Placeholder="Zoeken..." OnInput="OnOrganisationSearch"></SearchComponent>
+                            <div style="height: 360px; max-height:360px; overflow-y:auto; background-color:#eee;">
+                                @foreach (var item in Organisations)
+                                {
+                                    <span style="cursor: pointer">
+                                        <a role="button" style="width:100%; border-radius:0px; text-align:left" class="btn btn-light" @onclick="@(() => OnOrganisationItemSelected(item.Id))">
+                                            @if (SelectedOrganisations != null && SelectedOrganisations.Contains(item.Id))
+                                            {
+                                                <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-check-circle" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                                                    <path fill-rule="evenodd" d="M8 15A7 7 0 1 0 8 1a7 7 0 0 0 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z" />
+                                                    <path fill-rule="evenodd" d="M10.97 4.97a.75.75 0 0 1 1.071 1.05l-3.992 4.99a.75.75 0 0 1-1.08.02L4.324 8.384a.75.75 0 1 1 1.06-1.06l2.094 2.093 3.473-4.425a.236.236 0 0 1 .02-.022z" />
+                                                </svg>
+                                            }
+                                            else
+                                            {
+                                                <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-circle" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                                                    <path fill-rule="evenodd" d="M8 15A7 7 0 1 0 8 1a7 7 0 0 0 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z" />
+                                                </svg>
+                                            }
+                                            <span class="pl-3">
+                                                @item.Name
+                                            </span>
+                                        </a><br />
+                                    </span>
+                                }
+                            </div>
                         </div>
-                    </div>
-                    <div style="float:left; width:650px; margin-left:30px">
-                        <b>Label(s):</b>
-                        <SearchComponent Placeholder="Zoeken..." OnInput="OnTagSearch"></SearchComponent>
-                        <div style="height: 360px; max-height:360px; overflow-y:auto; background-color:#eee;">
-                            @foreach (var item in Tags)
-                            {
-                                <span style="cursor: pointer">
-                                    <a role="button" style="width:100%; border-radius:0px; text-align:left" class="btn btn-light" @onclick="@(() => OnTagItemSelected(item.Id))">
-                                        @if (SelectedTags != null && SelectedTags.Contains(item.Id))
-                                        {
-                                            <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-check-circle" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
-                                                <path fill-rule="evenodd" d="M8 15A7 7 0 1 0 8 1a7 7 0 0 0 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z" />
-                                                <path fill-rule="evenodd" d="M10.97 4.97a.75.75 0 0 1 1.071 1.05l-3.992 4.99a.75.75 0 0 1-1.08.02L4.324 8.384a.75.75 0 1 1 1.06-1.06l2.094 2.093 3.473-4.425a.236.236 0 0 1 .02-.022z" />
-                                            </svg>
-                                        }
-                                        else
-                                        {
-                                            <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-circle" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
-                                                <path fill-rule="evenodd" d="M8 15A7 7 0 1 0 8 1a7 7 0 0 0 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z" />
-                                            </svg>
-                                        }
-                                        <span class="pl-3">
-                                            @item.Title
-                                        </span>
-                                    </a><br />
-                                </span>
-                            }
+                        <div class="col-md">
+                            <b>Label(s):</b>
+                            <SearchComponent Placeholder="Zoeken..." OnInput="OnTagSearch"></SearchComponent>
+                            <div style="height: 360px; max-height:360px; overflow-y:auto; background-color:#eee;">
+                                @foreach (var item in Tags)
+                                {
+                                    <span style="cursor: pointer">
+                                        <a role="button" style="width:100%; border-radius:0px; text-align:left" class="btn btn-light" @onclick="@(() => OnTagItemSelected(item.Id))">
+                                            @if (SelectedTags != null && SelectedTags.Contains(item.Id))
+                                            {
+                                                <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-check-circle" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                                                    <path fill-rule="evenodd" d="M8 15A7 7 0 1 0 8 1a7 7 0 0 0 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z" />
+                                                    <path fill-rule="evenodd" d="M10.97 4.97a.75.75 0 0 1 1.071 1.05l-3.992 4.99a.75.75 0 0 1-1.08.02L4.324 8.384a.75.75 0 1 1 1.06-1.06l2.094 2.093 3.473-4.425a.236.236 0 0 1 .02-.022z" />
+                                                </svg>
+                                            }
+                                            else
+                                            {
+                                                <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-circle" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                                                    <path fill-rule="evenodd" d="M8 15A7 7 0 1 0 8 1a7 7 0 0 0 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z" />
+                                                </svg>
+                                            }
+                                            <span class="pl-3">
+                                                @item.Title
+                                            </span>
+                                        </a><br />
+                                    </span>
+                                }
+                            </div>
                         </div>
-                    </div>
+                    </div>                    
                 </div>
                 <hr />
                 <PrimaryButton Type="submit"> Opslaan </PrimaryButton>
@@ -141,64 +142,66 @@
                         <b>E-Mail: </b><br /><InputText class="form-control editItemInput" placeholder="E-Mail" @bind-Value="CurrentContact.Email"></InputText>
                         <ValidationMessage For="@(() => CurrentContact.Email)" />
 
-                        <div style="float:left; width:650px;">
-                            <b>Organisatie(s):</b>
-                            <SearchComponent Placeholder="Zoeken..." OnInput="OnOrganisationSearch"></SearchComponent>
-                            <div style="height: 360px; max-height:360px; overflow-y:auto; background-color:#eee;">
-                                @foreach (var item in Organisations)
-                                {
-                                    <span style="cursor: pointer">
-                                        <a role="button" style="width:100%; border-radius:0px; text-align:left" class="btn btn-light" @onclick="@(() => OnOrganisationItemSelected(item.Id))">
-                                            @if (SelectedOrganisations != null && SelectedOrganisations.Contains(item.Id))
-                                            {
-                                                <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-check-circle" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
-                                                    <path fill-rule="evenodd" d="M8 15A7 7 0 1 0 8 1a7 7 0 0 0 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z" />
-                                                    <path fill-rule="evenodd" d="M10.97 4.97a.75.75 0 0 1 1.071 1.05l-3.992 4.99a.75.75 0 0 1-1.08.02L4.324 8.384a.75.75 0 1 1 1.06-1.06l2.094 2.093 3.473-4.425a.236.236 0 0 1 .02-.022z" />
-                                                </svg>
-                                            }
-                                            else
-                                            {
-                                                <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-circle" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
-                                                    <path fill-rule="evenodd" d="M8 15A7 7 0 1 0 8 1a7 7 0 0 0 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z" />
-                                                </svg>
-                                            }
-                                            <span class="pl-3">
-                                                @item.Name
-                                            </span>
-                                        </a><br />
-                                    </span>
-                                }
+                        <div class="row">
+                            <div class="col-md">
+                                <b>Organisatie(s):</b>
+                                <SearchComponent Placeholder="Zoeken..." OnInput="OnOrganisationSearch"></SearchComponent>
+                                <div style="height: 360px; max-height:360px; overflow-y:auto; background-color:#eee;">
+                                    @foreach (var item in Organisations)
+                                    {
+                                        <span style="cursor: pointer">
+                                            <a role="button" style="width:100%; border-radius:0px; text-align:left" class="btn btn-light" @onclick="@(() => OnOrganisationItemSelected(item.Id))">
+                                                @if (SelectedOrganisations != null && SelectedOrganisations.Contains(item.Id))
+                                                {
+                                                    <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-check-circle" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                                                        <path fill-rule="evenodd" d="M8 15A7 7 0 1 0 8 1a7 7 0 0 0 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z" />
+                                                        <path fill-rule="evenodd" d="M10.97 4.97a.75.75 0 0 1 1.071 1.05l-3.992 4.99a.75.75 0 0 1-1.08.02L4.324 8.384a.75.75 0 1 1 1.06-1.06l2.094 2.093 3.473-4.425a.236.236 0 0 1 .02-.022z" />
+                                                    </svg>
+                                                }
+                                                else
+                                                {
+                                                    <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-circle" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                                                        <path fill-rule="evenodd" d="M8 15A7 7 0 1 0 8 1a7 7 0 0 0 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z" />
+                                                    </svg>
+                                                }
+                                                <span class="pl-3">
+                                                    @item.Name
+                                                </span>
+                                            </a><br />
+                                        </span>
+                                    }
+                                </div>
                             </div>
-                        </div>
-                        <div style="float:left; width:650px; margin-left:30px">
-                            <b>Label(s):</b>
-                            <SearchComponent Placeholder="Zoeken..." OnInput="OnTagSearch"></SearchComponent>
-                            <div style="height: 360px; max-height:360px; overflow-y:auto; background-color:#eee;">
-                                @foreach (var item in Tags)
-                                {
-                                    <span style="cursor: pointer">
-                                        <a role="button" style="width:100%; border-radius:0px; text-align:left" class="btn btn-light" @onclick="@(() => OnTagItemSelected(item.Id))">
-                                            @if (SelectedTags != null && SelectedTags.Contains(item.Id))
-                                            {
-                                                <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-check-circle" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
-                                                    <path fill-rule="evenodd" d="M8 15A7 7 0 1 0 8 1a7 7 0 0 0 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z" />
-                                                    <path fill-rule="evenodd" d="M10.97 4.97a.75.75 0 0 1 1.071 1.05l-3.992 4.99a.75.75 0 0 1-1.08.02L4.324 8.384a.75.75 0 1 1 1.06-1.06l2.094 2.093 3.473-4.425a.236.236 0 0 1 .02-.022z" />
-                                                </svg>
-                                            }
-                                            else
-                                            {
-                                                <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-circle" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
-                                                    <path fill-rule="evenodd" d="M8 15A7 7 0 1 0 8 1a7 7 0 0 0 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z" />
-                                                </svg>
-                                            }
-                                            <span class="pl-3">
-                                                @item.Title
-                                            </span>
-                                        </a><br />
-                                    </span>
-                                }
+                            <div class="col-md">
+                                <b>Label(s):</b>
+                                <SearchComponent Placeholder="Zoeken..." OnInput="OnTagSearch"></SearchComponent>
+                                <div style="height: 360px; max-height:360px; overflow-y:auto; background-color:#eee;">
+                                    @foreach (var item in Tags)
+                                    {
+                                        <span style="cursor: pointer">
+                                            <a role="button" style="width:100%; border-radius:0px; text-align:left" class="btn btn-light" @onclick="@(() => OnTagItemSelected(item.Id))">
+                                                @if (SelectedTags != null && SelectedTags.Contains(item.Id))
+                                                {
+                                                    <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-check-circle" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                                                        <path fill-rule="evenodd" d="M8 15A7 7 0 1 0 8 1a7 7 0 0 0 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z" />
+                                                        <path fill-rule="evenodd" d="M10.97 4.97a.75.75 0 0 1 1.071 1.05l-3.992 4.99a.75.75 0 0 1-1.08.02L4.324 8.384a.75.75 0 1 1 1.06-1.06l2.094 2.093 3.473-4.425a.236.236 0 0 1 .02-.022z" />
+                                                    </svg>
+                                                }
+                                                else
+                                                {
+                                                    <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-circle" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                                                        <path fill-rule="evenodd" d="M8 15A7 7 0 1 0 8 1a7 7 0 0 0 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z" />
+                                                    </svg>
+                                                }
+                                                <span class="pl-3">
+                                                    @item.Title
+                                                </span>
+                                            </a><br />
+                                        </span>
+                                    }
+                                </div>
                             </div>
-                        </div>
+                        </div>                        
                     </div>                    
                     <hr />
                     <PrimaryButton Type="submit">Opslaan</PrimaryButton>
