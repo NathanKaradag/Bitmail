@@ -3,93 +3,105 @@
 @using Bitmail.Components
 @using Bitmail.Components.Buttons;
 @attribute [Authorize]
+<h3>Campagne historie:</h3>
+<div class="m-0 p-0 col-3">
+
+	<SearchComponent Placeholder="Zoeken..." OnInput="OnSearch"></SearchComponent>
+</div>
+<hr />
 <div class="row">
 	<div class="col col-nav">
-		<h3>Campagne historie:</h3>
-		<hr />
-		<SearchComponent Placeholder="Zoeken..." OnInput="OnSearch"></SearchComponent>
 		@if (Campaigns != null)
 		{
-			@foreach (var item in Campaigns)
-			{
-				<a style="cursor: pointer" class="list-item" role="button" @onclick="@(() => OnCampaignClicked(item))">
-					<div class="row m-0">
+			<div class="vertical-menu" style="height:660px; max-height:100%;">
+				@foreach (var item in Campaigns)
+				{
+					<button type="button" style="width:100%; border-radius:0px;" class="btn btn-light vertical-menu-button" @onclick="@(() => OnCampaignClicked(item))">
+						<div class="row m-0">
 
-						<div class="col-9 p-0" style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
-							@item.Title
+							<div class="col-9 p-0" style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+								@item.Title
+							</div>
+							<div class="col-3 p-0" style=" text-align:right; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+								@item.Date.ToString("dd/MM")
+							</div>
 						</div>
-						<div class="col-3 p-0" style=" text-align:right; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
-							@item.Date.ToString("dd/MM")
-						</div>
-					</div>
-				</a>
-			}
+					</button><br />
+
+				}
+			</div>
 		}
 		else
 		{
-			<div class="spinner-border text-primary" role="status">
-				<span class="sr-only">Loading...</span>
+			<div class="vertical-menu" style="height:660px; max-height:100%;">
+				<div class="spinner-border text-primary " role="status" style="		margin-left: 112px; margin-top: 15px;
+">
+					<span class="sr-only">Loading...</span>
+				</div>
+				<br />
 			</div>
 		}
 	</div>
-	<div class="col">
-
+	<div class="col pl-4 ml-4">
 		@if (CurrentCampaign != null)
 		{
 			<h3>@CurrentCampaign.Title</h3>
-			<b>@CurrentCampaign.SubjectLine</b><br />
-			<b>Verzonden:</b> @CurrentCampaign.Date.ToLocalTime().ToString("dd/MM/yyyy HH:mm:ss");
-			<div class="row">
+			<div style="height:660px; max-height:100%;    overflow-y: auto; overflow-x: hidden;">
+				<b>@CurrentCampaign.SubjectLine</b><br />
+				<b>Verzonden:</b> @CurrentCampaign.Date.ToLocalTime().ToString("dd/MM/yyyy HH:mm:ss")
+				<div class="row">
 
-				<div class="col-md">
-					<b>Labels:</b>
-					<div style="height: 200px; overflow-y:auto; background-color:#eee;">
-						@if (CurrentCampaign.Tags != null)
-						{
-							@foreach (var item in CurrentCampaign.Tags.Split(";"))
+					<div class="col-md">
+						<b>Labels:</b>
+						<div style="height: 200px; overflow-y:auto; background-color:#eee;">
+							@if (CurrentCampaign.Tags != null)
 							{
-								@if (!string.IsNullOrEmpty(item))
+								@foreach (var item in CurrentCampaign.Tags.Split(";"))
 								{
-									<span style="cursor: pointer">
-										<span class="pl-3">
-											@item
+									@if (!string.IsNullOrEmpty(item))
+									{
+										<span style="cursor: pointer">
+											<span class="pl-3">
+												@item
+											</span>
+											<br />
 										</span>
-										<br />
-									</span>
-								}
-							}}
+									}
+								}}
+						</div>
 					</div>
-				</div>
-				<div class="col-md">
-					<b>Contacten:</b>
-					<div style="height: 200px; overflow-y:auto; background-color:#eee;">
-						@if (CurrentCampaign.Contacts != null)
-						{
-							@foreach (var item in CurrentCampaign.Contacts.Split(";"))
+					<div class="col-md">
+						<b>Contacten:</b>
+						<div style="height: 200px; overflow-y:auto; background-color:#eee;">
+							@if (CurrentCampaign.Contacts != null)
 							{
-								@if (!string.IsNullOrEmpty(item))
+								@foreach (var item in CurrentCampaign.Contacts.Split(";"))
 								{
-									<span style="cursor: pointer">
-										<span class="pl-3">
-											@item
+									@if (!string.IsNullOrEmpty(item))
+									{
+										<span style="cursor: pointer">
+											<span class="pl-3">
+												@item
+											</span>
+											<br />
 										</span>
-										<br />
-									</span>
+									}
 								}
 							}
-						}
+						</div>
 					</div>
 				</div>
+
+				<b>Email inhoud:</b>
+				@if (!string.IsNullOrEmpty(CurrentCampaign.HTML))
+				{
+					<div class="email-html">
+						@((MarkupString)CurrentCampaign.HTML)
+					</div>
+
+				}
 			</div>
-
-			<b>Email inhoud:</b>
-			@if (!string.IsNullOrEmpty(CurrentCampaign.HTML))
-			{
-				<div class="email-html">
-					@((MarkupString)CurrentCampaign.HTML)
-				</div>
-
-			}
+			<hr />
 			<DangerButton OnClick="() => { _=RemoveHistory(CurrentCampaign); }">Verwijderen</DangerButton>
 
 		}
