@@ -4,53 +4,54 @@
 @using Bitmail.Components
 @using Bitmail.Components.Buttons;
 @attribute [Authorize]
-	<h3>Campagnes:</h3>
-	<div class="m-0 p-0 col-3">
+<h3>Campagnes:</h3>
+<div class="m-0 p-0 col-3">
 
-		<SearchComponent Placeholder="Zoeken..." OnInput="OnSearch"></SearchComponent>
-	</div>
-	<hr />
-	<div class="row">
+	<SearchComponent Placeholder="Zoeken..." OnInput="OnSearch"></SearchComponent>
+</div>
+<hr />
+<div class="row">
 
-		<div class="col col-nav">
-			@if (Campaigns != null)
-			{
-				<div class="vertical-menu" style="height:660px; max-height:100%;">
-					@foreach (var item in Campaigns)
-					{
-						<button type="button" style="width:100%; border-radius:0px;" class="btn btn-light vertical-menu-button" @onclick="@(() => OnCampaignClicked(item))">
-							<div class="row m-0">
+	<div class="col col-nav">
+		@if (Campaigns != null)
+		{
+			<div class="vertical-menu" style="height:660px; max-height:100%;">
+				@foreach (var item in Campaigns)
+				{
+					<button type="button" style="width:100%; border-radius:0px;" class="btn btn-light vertical-menu-button" @onclick="@(() => OnCampaignClicked(item))">
+						<div class="row m-0">
 
-								<div class="col-9 p-0" style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
-									@item.Title
-								</div>
-								<div class="col-3 p-0" style=" text-align:right; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
-									@item.Date.ToString("dd/MM")
-								</div>
+							<div class="col-9 p-0" style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+								@item.Title
 							</div>
-						</button><br />
+							<div class="col-3 p-0" style=" text-align:right; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+								@item.Date.ToString("dd/MM")
+							</div>
+						</div>
+					</button><br />
 
-					}
-				</div>
-			}
-			else
-			{
-				<div class="vertical-menu" style="height:660px; max-height:100%;">
-					<div class="spinner-border text-primary" role="status">
-						<span class="sr-only">Loading...</span>
-					</div>
-					<br />
-				</div>
-			}
-			<hr />
-			<div class="content-nav-bottom">
-				<PrimaryButton OnClick="OnNewCampaign">Nieuw campagne</PrimaryButton>
+				}
 			</div>
+			
+		}
+		else
+		{
+			<div class="vertical-menu" style="height:660px; max-height:100%;">
+				<div class="spinner-border text-primary" role="status" style=" margin-left: 112px; margin-top:15px;">
+					<span class="sr-only">Loading...</span>
+				</div>
+				<br />
+			</div>
+		}
+		<hr />
+		<div class="content-nav-bottom">
+			<PrimaryButton OnClick="OnNewCampaign">Nieuw campagne</PrimaryButton>
 		</div>
-		<div class="col pl-4 ml-4">
+	</div>
+	<div class="col pl-4 ml-4">
 
-			@if (CurrentCampaign != null)
-			{
+		@if (CurrentCampaign != null)
+		{
 			<EditForm Model="CurrentCampaign" OnSubmit="@(() => _ = SaveCampaignAndSend())">
 				<div style="height:660px; max-height:100%;    overflow-y: auto; overflow-x: hidden;">
 					<div class="row">
@@ -175,21 +176,21 @@
 
 				}
 			</EditForm>
-			}
+		}
 
-			@if (!string.IsNullOrEmpty(SendMessage))
-			{
-				<div class="alert alert-primary" role="alert">
-					@SendMessage
-					@if (EmailStatus == SendingStatus.Done)
+		@if (!string.IsNullOrEmpty(SendMessage))
+		{
+			<div class="alert alert-primary" role="alert">
+				@SendMessage
+				@if (EmailStatus == SendingStatus.Done)
+				{
+					@if (LastId != null)
 					{
-						@if (LastId != null)
-						{
-							<a href="/emails/history/@LastId">Bekijken</a>
-						}
+						<a href="/emails/history/@LastId">Bekijken</a>
 					}
-				</div>
+				}
+			</div>
 
-			}
-		</div>
+		}
 	</div>
+</div>
