@@ -1,7 +1,10 @@
 ﻿@page "/"
 
-<h1>Hello, world!</h1>
 
-Welcome to your new app.
-
-<SurveyPrompt Title="How is Blazor working for you?" />
+@if (authState.User.Identity.Name != null)
+{
+    <p>
+        <h2> Hallo, @authState.User.Identity.Name </h2>
+        Welkom bij Bitmail
+    </p>
+}

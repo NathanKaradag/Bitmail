@@ -2,17 +2,22 @@
 using Bitmail.Services;
 using Microsoft.AspNetCore.Components;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using MailChimpWrapper.Models.Requests;
+
+
 
 namespace Bitmail.Pages
 {
     public partial class Labels
     {
-        [Inject]
-        private DatabaseService DatabaseService { get; set; }
+        [Inject] private DatabaseService DatabaseService { get; set; }
+        [Inject] private MailChimpService MailChimpService { get; set; }
+        [Inject] private IConfiguration configuration { get; set; }
         protected Tag CurrentTag { get; set; }
         protected List<Tag> AllTags { get; set; }
         protected List<Tag> Tags { get; set; }
@@ -47,6 +52,7 @@ namespace Bitmail.Pages
             DatabaseService.DB.Tags.Add(CurrentTag);
 
             await DatabaseService.DB.SaveChangesAsync();
+            await TagsInMailchimp("active");
             AllTags = DatabaseService.DB.Tags.ToList();
             Tags = AllTags;
             CurrentTag = new Tag();
@@ -83,8 +89,10 @@ namespace Bitmail.Pages
             }
             StateHasChanged();
         }
-        protected void RemoveTag()
+        protected async Task RemoveTag()
         {
+            await TagsInMailchimp("inactive");
+
             DatabaseService.DB.Tags.Remove(CurrentTag);
             DatabaseService.DB.SaveChanges();
             CurrentTag = new Tag();
@@ -107,6 +115,7 @@ namespace Bitmail.Pages
             CurrentTag.ContactTags = res2;
 
             await DatabaseService.DB.SaveChangesAsync();
+            await TagsInMailchimp("active");
             EditClicked = false;
             StateHasChanged();
         }
@@ -127,6 +136,21 @@ namespace Bitmail.Pages
             }
 
             StateHasChanged();
+        }
+        protected async Task TagsInMailchimp(string TagStatus)
+        {
+            var listId = configuration.GetValue<string>("MailChimpConstants:SubscriberListId");
+            var TagHasContacts = new List<Contact>();
+
+            foreach(var contacttag in CurrentTag.ContactTags)
+            {
+                TagHasContacts.Add(contacttag.Contact);
+            }
+
+            foreach(var contact in TagHasContacts)
+            {
+                await MailChimpService.Client.Request(new MemberTagsPostRequest(listId, contact.Email, new List<MailChimpWrapper.Models.Tag>() { new MailChimpWrapper.Models.Tag() { Name = CurrentTag.Title, Status = TagStatus } }));
+            }
         }
     }
 }

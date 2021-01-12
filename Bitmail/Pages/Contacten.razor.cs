@@ -33,6 +33,9 @@ namespace Bitmail.Pages
         protected bool EditClicked { get; set; }
         protected string SearchTerm { get; set; } = "";
         protected List<Contact> FilteredContacts => AllContacts.Where(i => (i.FirstName + " " + i.LastName).ToLower().Contains(SearchTerm.ToLower())).ToList();
+        protected List<Contact> EveryContact { get; set; }
+        protected Contact ImportantContact { get; set; }
+        protected List<Tag> tagsFiltered { get; set; }
 
         protected override async Task OnInitializedAsync()
         {
@@ -48,7 +51,6 @@ namespace Bitmail.Pages
 
         protected async Task SaveContact()
         {
-            //await AddContactToMailchimp();
             DatabaseService.DB.Contacts.Add(CurrentContact);
 
             List<Organisation> realOrganisations = new List<Organisation>();
@@ -59,8 +61,6 @@ namespace Bitmail.Pages
             }
             List<OrganisationContact> res = realOrganisations.Select(rc => new OrganisationContact() { Contact = CurrentContact, OrganisationId = rc.Id, Organisation = rc }).ToList();
             CurrentContact.OrganisationContacts = res;
-            await DatabaseService.DB.SaveChangesAsync();
-
 
             List<Tag> realTags = new List<Tag>();
             foreach(var selectedTag in SelectedTags)
@@ -73,7 +73,8 @@ namespace Bitmail.Pages
             await DatabaseService.DB.SaveChangesAsync();
 
             await ContactInMailchimp("subscribed");
-            AllContacts = DatabaseService.DB.Contacts.ToList();
+            AllContacts = DatabaseService.DB.Contacts.Include(t => t.OrganisationContacts).Include(x => x.ContactTags).ToList();
+            EveryContact = DatabaseService.DB.Contacts.Include(t => t.OrganisationContacts).Include(x => x.ContactTags).ToList();
             CurrentContact = new Contact();
             StateHasChanged();
 
@@ -156,7 +157,6 @@ namespace Bitmail.Pages
             }
             List<OrganisationContact> res = realOrganisations.Select(rc => new OrganisationContact() { Contact = CurrentContact, OrganisationId = rc.Id, Organisation = rc }).ToList();
             CurrentContact.OrganisationContacts = res;
-            await DatabaseService.DB.SaveChangesAsync();
 
             List<Tag> realTags = new List<Tag>();
             foreach (var selectedTag in SelectedTags)
@@ -165,6 +165,8 @@ namespace Bitmail.Pages
                 realTags.Add(existingTag);
             }
             List<ContactTag> res2 = realTags.Select(rc => new ContactTag() { Contact = CurrentContact, TagId = rc.Id, Tag = rc }).ToList();
+            await RemoveTags(res2);
+
             CurrentContact.ContactTags = res2;
             await DatabaseService.DB.SaveChangesAsync();
 
@@ -176,7 +178,7 @@ namespace Bitmail.Pages
         {
             EditClicked = true;
         }
-        public async Task ContactInMailchimp(string memberStatus)
+        protected async Task ContactInMailchimp(string memberStatus)
         {
             try
             {
@@ -204,10 +206,19 @@ namespace Bitmail.Pages
                 {
                     foreach (var tag in CurrentContact.ContactTags)
                     {
-                        await MailChimpService.Client.Request(new MemberTagsPostRequest(listId, CurrentContact.Email, new List<MailChimpWrapper.Models.Tag>() { new MailChimpWrapper.Models.Tag() { Name = tag.Tag.Title, Status = "active" } }));
+                        if(EditClicked == true && !tagsFiltered.Contains(tag.Tag))
+                        {
+                            if (!tagsFiltered.Contains(tag.Tag))
+                            {
+                                await MailChimpService.Client.Request(new MemberTagsPostRequest(listId, CurrentContact.Email, new List<MailChimpWrapper.Models.Tag>() { new MailChimpWrapper.Models.Tag() { Name = tag.Tag.Title, Status = "active" } }));
+                            }
+                        }
+                        else
+                        {
+                            await MailChimpService.Client.Request(new MemberTagsPostRequest(listId, CurrentContact.Email, new List<MailChimpWrapper.Models.Tag>() { new MailChimpWrapper.Models.Tag() { Name = tag.Tag.Title, Status = "active" } }));
+                        }
                     }
                 }
-                
             }
             catch (ResponseException responseException)
             {
@@ -243,6 +254,37 @@ namespace Bitmail.Pages
                 Tags = AllTags;
             }
             StateHasChanged();
+        }
+        protected async Task RemoveTags(List<ContactTag> existingContactTags)
+        {
+            //Als je een contact's tags aanpast moeten de tags die de contact eerst had, maar nu niet meer heeft uit mailchimp verwijderd worden. Vandaar deze functie.
+            List<Tag> existingTags = (from x in existingContactTags
+                                      select x.Tag).ToList();
+
+            var listId = configuration.GetValue<string>("MailChimpConstants:SubscriberListId");
+
+            foreach (var cont in EveryContact)
+            {
+                if (CurrentContact.Id == cont.Id)
+                {
+                    ImportantContact = cont;
+                }
+            }
+
+            List<ContactTag> ImportantContactTags = ImportantContact.ContactTags.ToList();
+            tagsFiltered = (from x in AllContacts
+                            from y in AllTags
+                            from z in ImportantContactTags
+                            where z.Contact == x && z.Tag == y
+                            select y).ToList();
+
+            foreach (var tag in tagsFiltered)
+            {
+                if (!existingTags.Contains(tag))
+                {
+                    await MailChimpService.Client.Request(new MemberTagsPostRequest(listId, CurrentContact.Email, new List<MailChimpWrapper.Models.Tag>() { new MailChimpWrapper.Models.Tag() { Name = tag.Title, Status = "inactive" } }));
+                }
+            }
         }
     }
 }
