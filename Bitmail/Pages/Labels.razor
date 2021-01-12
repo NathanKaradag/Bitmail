@@ -2,6 +2,7 @@
 @using Bitmail.Models;
 @using Bitmail.Components
 @using Bitmail.Components.Buttons;
+@attribute [Authorize]
 
 <h3>Labels</h3>
 <input class="form-control col-3" @bind-value="keyword" @bind-value:event="oninput" placeholder="Zoeken..." />
@@ -72,7 +73,7 @@
 				{
 					<div style="height:660px; max-height:100%;">
 						<b>Bekijk label:</b><br />
-						<b>Naam: </b><br /><input class="form-control editItemInput" placeholder="Naam" value="@CurrentTag.Title" disabled/>
+						<b>Naam: </b><br /><input class="form-control editItemInput" placeholder="Naam" value="@CurrentTag.Title" disabled />
 						<b>Bijbehorende contacten: </b><br>
 						<div style="height: 550px; max-height:550px; overflow-y:auto; background-color:#eee;">
 							@foreach (var item in CurrentTag.ContactTags)

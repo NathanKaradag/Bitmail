@@ -2,6 +2,7 @@
 @using Bitmail.Models;
 @using Bitmail.Components
 @using Bitmail.Components.Buttons;
+@attribute [Authorize]
 
 <h3>Contacten</h3>
 <input class="form-control col-3" @bind-value="SearchTerm" @bind-value:event="oninput" placeholder="Zoeken..." />
@@ -110,7 +111,6 @@
                     <b>Achternaam: </b><br /><input class="form-control editItemInput disabled" value="@CurrentContact.LastName" placeholder="Achternaam" disabled />
 
                     <b>E-Mail: </b><br /><input class="form-control editItemInput disabled" value="@CurrentContact.Email" placeholder="E-Mail" disabled />
-
 
                     <div class="row">
                         <div class="col-md">
@@ -233,12 +233,8 @@
                     <hr />
                     <PrimaryButton Type="submit">Opslaan</PrimaryButton>
                     <DangerButton OnClick="@(() => OnContactClicked(CurrentContact))">Annuleer</DangerButton>
-
                 </EditForm>
             }
         }
     </div>
 </div>
-
-
-
