@@ -9,7 +9,7 @@
 <div class="row">
     <div class="col col-nav">
         <div class="vertical-menu" style="height:660px; max-height:100%;">
-            @foreach (var item in FilteredContacts)
+            @foreach (var item in FilteredContacts.OrderBy(c => (c != null) ? c.FirstName : ""))
             {
                 <button type="button" style="width:100%; border-radius:0px;" class="btn btn-light vertical-menu-button" @onclick="@(()=> OnContactClicked(item) )">@item.FirstName @item.LastName</button><br />
             }
@@ -25,7 +25,7 @@
             <EditForm Model="CurrentContact" OnSubmit="SaveContact">
                 <div style="height:660px; max-height:100%;">
                     <DataAnnotationsValidator />
-                    <b>Nieuwe Contact:</b><br />
+                    <b>Nieuw contact:</b><br />
                     <b>Voornaam: </b><br /><InputText class="form-control editItemInput" placeholder="Voornaam" @bind-Value="CurrentContact.FirstName"></InputText>
                     <ValidationMessage For="@(() => CurrentContact.FirstName)" />
                     <b>Acgrernaam: </b><br /><InputText class="form-control editItemInput" placeholder="Voornaam" @bind-Value="CurrentContact.LastName"></InputText>
@@ -37,7 +37,7 @@
                             <b>Organisatie(s):</b>
                             <SearchComponent Placeholder="Zoeken..." OnInput="OnOrganisationSearch"></SearchComponent>
                             <div style="height: 360px; max-height:360px; overflow-y:auto; background-color:#eee;">
-                                @foreach (var item in Organisations)
+                                @foreach (var item in Organisations.OrderBy(o => (o != null) ? o.Name : ""))
                                 {
                                     <span style="cursor: pointer">
                                         <a role="button" style="width:100%; border-radius:0px; text-align:left" class="btn btn-light" @onclick="@(() => OnOrganisationItemSelected(item.Id))">
@@ -66,7 +66,7 @@
                             <b>Label(s):</b>
                             <SearchComponent Placeholder="Zoeken..." OnInput="OnTagSearch"></SearchComponent>
                             <div style="height: 360px; max-height:360px; overflow-y:auto; background-color:#eee;">
-                                @foreach (var item in Tags)
+                                @foreach (var item in Tags.OrderBy(t => (t != null) ? t.Title : ""))
                                 {
                                     <span style="cursor: pointer">
                                         <a role="button" style="width:100%; border-radius:0px; text-align:left" class="btn btn-light" @onclick="@(() => OnTagItemSelected(item.Id))">
@@ -91,7 +91,7 @@
                                 }
                             </div>
                         </div>
-                    </div>                    
+                    </div>
                 </div>
                 <hr />
                 <PrimaryButton Type="submit"> Opslaan </PrimaryButton>
@@ -103,41 +103,68 @@
             @if (CurrentContact.Email != null && !EditClicked)
             {
                 <div style="height:660px; max-height:100%;">
-                    <b>@CurrentContact.FirstName</b><br>
-                    <b>@CurrentContact.LastName</b><br>
-                    <b>@CurrentContact.Email</b><br>
-                    <b>@CurrentContact.Id</b><br>
+                    <b>Bekijk contact:</b><br />
+
+                    <b>Voornaam: </b><br /><input class="form-control editItemInput disabled" value="@CurrentContact.FirstName" placeholder="Voornaam" disabled />
+
+                    <b>Achternaam: </b><br /><input class="form-control editItemInput disabled" value="@CurrentContact.LastName" placeholder="Achternaam" disabled />
+
+                    <b>E-Mail: </b><br /><input class="form-control editItemInput disabled" value="@CurrentContact.Email" placeholder="E-Mail" disabled />
 
 
-                    <div style="height: 200px; overflow-y:auto">
-                        <b>Bijbehorende organisaties: </b><br>
-                        @foreach (var oc in CurrentContact.OrganisationContacts)
-                        {
-                            <span>- @oc.Organisation.Name</span><br />
-                        }
-                    </div>
-                    <div style="height: 200px; overflow-y:auto">
-                        <b>Bijbehorende Labels: </b><br>
-                        @foreach (var oc in CurrentContact.ContactTags)
-                        {
-                            <span>- @oc.Tag.Title</span><br />
-                        }
+                    <div class="row">
+                        <div class="col-md">
+                            <b>Organisatie(s):</b>
+
+                            <div style="height: 400px; max-height:400px; overflow-y:auto; background-color:#eee;">
+                                @foreach (var item in CurrentContact.OrganisationContacts.OrderBy(ct => (ct.Organisation != null) ? ct.Organisation.Name : ""))
+                                {
+                                    @if (item.Organisation != null)
+                                    {
+                                        <span style="cursor: pointer">
+                                            <a role="button" style="width:100%; border-radius:0px; text-align:left" class="btn btn-light">
+                                                <span class="pl-3">
+                                                    @item.Organisation.Name
+                                                </span>
+                                            </a><br />
+                                        </span>
+                                    }
+                                }
+                            </div>
+                        </div>
+                        <div class="col-md">
+                            <b>Label(s):</b>
+                            <div style="height: 400px; max-height:400px; overflow-y:auto; background-color:#eee;">
+                                @foreach (var item in CurrentContact.ContactTags.OrderBy(ct=>(ct.Tag != null)?ct.Tag.Title:""))
+                                {
+                                    @if (item.Tag != null)
+                                    {
+                                        <span style="cursor: pointer">
+                                            <a role="button" style="width:100%; border-radius:0px; text-align:left" class="btn btn-light">
+                                                <span class="pl-3">
+                                                    @item.Tag.Title
+                                                </span>
+                                            </a><br />
+                                        </span>
+                                    }
+                                }
+                            </div>
+                        </div>
                     </div>
                 </div>
-
                 <hr />
                 <PrimaryButton OnClick="OnEditClicked">Wijzig Contact</PrimaryButton>
-                <DangerButton OnClick="RemoveContact">Verwijder Contact</DangerButton>                               
+                <DangerButton OnClick="RemoveContact">Verwijder Contact</DangerButton>
             }
             @if (EditClicked)
             {
                 <EditForm Model="CurrentContact" OnSubmit="EditContact">
                     <div style="height:660px; max-height:100%;">
-                        <b>Wijzig contact</b><br />
+                        <b>Wijzig contact:</b><br />
                         <DataAnnotationsValidator />
-                        <b>Voornaam: </b><br /><InputText class="form-control editItemInput" placeholder="Vooraam" @bind-Value="CurrentContact.FirstName"></InputText>
+                        <b>Voornaam: </b><br /><InputText class="form-control editItemInput" placeholder="Voornaam" @bind-Value="CurrentContact.FirstName"></InputText>
                         <ValidationMessage For="@(() => CurrentContact.FirstName)" />
-                        <b>Achternaam: </b><br /><InputText class="form-control editItemInput" placeholder="Vooraam" @bind-Value="CurrentContact.LastName"></InputText>
+                        <b>Achternaam: </b><br /><InputText class="form-control editItemInput" placeholder="Achternaam" @bind-Value="CurrentContact.LastName"></InputText>
                         <ValidationMessage For="@(() => CurrentContact.LastName)" />
                         <b>E-Mail: </b><br /><InputText class="form-control editItemInput" placeholder="E-Mail" @bind-Value="CurrentContact.Email"></InputText>
                         <ValidationMessage For="@(() => CurrentContact.Email)" />
@@ -147,7 +174,7 @@
                                 <b>Organisatie(s):</b>
                                 <SearchComponent Placeholder="Zoeken..." OnInput="OnOrganisationSearch"></SearchComponent>
                                 <div style="height: 360px; max-height:360px; overflow-y:auto; background-color:#eee;">
-                                    @foreach (var item in Organisations)
+                                    @foreach (var item in Organisations.OrderBy(o => (o != null) ? o.Name : ""))
                                     {
                                         <span style="cursor: pointer">
                                             <a role="button" style="width:100%; border-radius:0px; text-align:left" class="btn btn-light" @onclick="@(() => OnOrganisationItemSelected(item.Id))">
@@ -176,7 +203,7 @@
                                 <b>Label(s):</b>
                                 <SearchComponent Placeholder="Zoeken..." OnInput="OnTagSearch"></SearchComponent>
                                 <div style="height: 360px; max-height:360px; overflow-y:auto; background-color:#eee;">
-                                    @foreach (var item in Tags)
+                                    @foreach (var item in Tags.OrderBy(t => (t != null) ? t.Title : ""))
                                     {
                                         <span style="cursor: pointer">
                                             <a role="button" style="width:100%; border-radius:0px; text-align:left" class="btn btn-light" @onclick="@(() => OnTagItemSelected(item.Id))">
@@ -201,8 +228,8 @@
                                     }
                                 </div>
                             </div>
-                        </div>                        
-                    </div>                    
+                        </div>
+                    </div>
                     <hr />
                     <PrimaryButton Type="submit">Opslaan</PrimaryButton>
                     <DangerButton OnClick="@(() => OnContactClicked(CurrentContact))">Annuleer</DangerButton>
