@@ -10,7 +10,7 @@
 <div class="row">
 	<div class="col col-nav">
 		<div class="vertical-menu" style="height:660px; max-height:100%;">
-			@foreach (var item in Organisations)
+			@foreach (var item in Organisations.OrderBy(o => (o != null) ? o.Name : ""))
 			{
 				<button type="button" style="width:100%; border-radius:0px;" class="btn btn-light vertical-menu-button" @onclick="@(() => OnOrganisationClicked(item))">@item.Name</button>
 			}
@@ -30,13 +30,13 @@
 					<b>Naam: </b><br /><InputText class="form-control editItemInput" placeholder="Naam" @bind-Value="CurrentOrganisation.Name"></InputText>
 					<ValidationMessage For="@(() => CurrentOrganisation.Name)" />
 
-					<b>Beschrijving: </b><br /><InputTextArea class="form-control editItemInput" placeholder="Beschrijving" @bind-Value="CurrentOrganisation.Description"></InputTextArea>
+					<b>Beschrijving: </b><br /><InputTextArea style="max-height: 60px; min-height: 60px;" class="form-control editItemInput" placeholder="Beschrijving" @bind-Value="CurrentOrganisation.Description"></InputTextArea>
 					<ValidationMessage For="@(() => CurrentOrganisation.Description)" />
 
 					<b>Contacten:</b>
 					<SearchComponent Placeholder="Zoeken..." OnInput="OnContactSearch"></SearchComponent>
 					<div style="height: 410px; max-height:410px; overflow-y:auto; background-color:#eee;">
-						@foreach (var item in Contacts)
+						@foreach (var item in Contacts.OrderBy(c => (c != null) ? c.Email : ""))
 						{
 							<span style="cursor: pointer">
 								<a role="button" style="width:100%; border-radius:0px; text-align:left" class="btn btn-light" @onclick="@(() => OnContactItemSelected(item.Id))">
@@ -72,12 +72,13 @@
 			{
 				@if (CurrentOrganisation.OrganisationContacts != null && !EditClicked)
 				{
-					<div style="height:660px; max-height:100%;">
-						<b>@CurrentOrganisation.Name</b>
-						<p>@CurrentOrganisation.Description</p>
+					<div style="height:660px; max-height:100%;">						
+						<b>Bekijk organisatie:</b><br />
+						<b>Naam: </b><br /><input class="form-control editItemInput" placeholder="Naam" value="@CurrentOrganisation.Name" disabled/>
+						<b>Beschrijving: </b><br /><textarea style="max-height: 60px; min-height: 60px;" class="form-control editItemInput" placeholder="Naam" value="@CurrentOrganisation.Description" disabled/>						
 						<b>Bijbehorende contacten: </b><br>
-						<div style="height: 573px; max-height:573px; overflow-y:auto; background-color:#eee;">
-							@foreach (var item in CurrentOrganisation.OrganisationContacts)
+						<div style="height: 450px; max-height:450px; overflow-y:auto; background-color:#eee;">
+							@foreach (var item in CurrentOrganisation.OrganisationContacts.OrderBy(oc => (oc != null) ? oc.Contact.Email : ""))
 							{
 								@if (item.Contact != null)
 								{
@@ -104,14 +105,14 @@
 						<b>Naam: </b><br /><InputText class="form-control editItemInput" placeholder="Naam" @bind-Value="CurrentOrganisation.Name"></InputText>
 						<ValidationMessage For="@(() => CurrentOrganisation.Name)" />
 
-						<b>Beschrijving: </b><br /><InputTextArea class="form-control editItemInput" placeholder="Beschrijving" @bind-Value="CurrentOrganisation.Description"></InputTextArea>
+						<b>Beschrijving: </b><br /><InputTextArea style="max-height: 60px; min-height: 60px;" class="form-control editItemInput" placeholder="Beschrijving" @bind-Value="CurrentOrganisation.Description"></InputTextArea>
 						<ValidationMessage For="@(() => CurrentOrganisation.Description)" />
 
 						<b>Contacten: </b>
 						<SearchComponent Placeholder="Zoeken..." OnInput="OnContactSearch"></SearchComponent>
 
 						<div style="height: 410px; max-height:410px; overflow-y:auto; background-color:#eee;">
-							@foreach (var item in Contacts)
+							@foreach (var item in Contacts.OrderBy(c => (c != null) ? c.Email : ""))
 							{
 								<span style="cursor: pointer">
 									<a role="button" style="width:100%; border-radius:0px; text-align:left" class="btn btn-light" @onclick="@(() => OnContactItemSelected(item.Id))">

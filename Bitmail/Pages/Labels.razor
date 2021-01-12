@@ -9,7 +9,7 @@
 <div class="row">
 	<div class="col col-nav">
 		<div class="vertical-menu" style="height:660px; max-height:100%;">
-			@foreach (Tag item in FilteredTags)
+			@foreach (Tag item in FilteredTags.OrderBy(t => (t != null) ? t.Title : ""))
 			{
 				<button type="button" style="width:100%; border-radius:0px;" class="btn btn-light vertical-menu-button" @onclick="@(() => OnTagClicked(item))">@item.Title</button><br />
 			}
@@ -33,7 +33,7 @@
 						<b>Contacten:</b>
 						<SearchComponent Placeholder="Zoeken..." OnInput="OnContactSearch"></SearchComponent>
 						<div style="height: 510px; max-height:510px; overflow-y:auto; background-color:#eee;">
-							@foreach (var item in Contacts)
+							@foreach (var item in Contacts.OrderBy(c => (c != null) ? c.Email : ""))
 							{
 								<span style="cursor: pointer">
 									<a role="button" style="width:100%; border-radius:0px; text-align:left" class="btn btn-light" @onclick="@(() => OnContactItemSelected(item.Id))">
@@ -75,7 +75,7 @@
 						<b>Naam: </b><br /><input class="form-control editItemInput" placeholder="Naam" value="@CurrentTag.Title" disabled/>
 						<b>Bijbehorende contacten: </b><br>
 						<div style="height: 550px; max-height:550px; overflow-y:auto; background-color:#eee;">
-							@foreach (var item in CurrentTag.ContactTags)
+							@foreach (var item in CurrentTag.ContactTags.OrderBy(ct => (ct != null) ? ct.Contact.Email : ""))
 							{
 								@if (item.Contact != null)
 								{
@@ -108,7 +108,7 @@
 							<SearchComponent Placeholder="Zoeken..." OnInput="OnContactSearch"></SearchComponent>
 
 							<div style="height: 510px; max-height:510px; overflow-y:auto; background-color:#eee;">
-								@foreach (var item in Contacts)
+								@foreach (var item in Contacts.OrderBy(c => (c != null) ? c.Email : ""))
 								{
 									<span style="cursor: pointer">
 										<a role="button" style="width:100%; border-radius:0px; text-align:left" class="btn btn-light" @onclick="@(() => OnContactItemSelected(item.Id))">
