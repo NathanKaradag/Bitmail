@@ -1,0 +1,61 @@
+﻿@page "/emails/statistics"
+@attribute [Authorize]
+<h3>Statistieken</h3>
+<table class="table table-striped">
+	<thead>
+		<tr>
+			<th scope="col">Titel</th>
+			<th scope="col">Kliks</th>
+			<th scope="col">Opens</th>
+			<th scope="col">Aantal verzonden</th>
+			<th scope="col">Verzonden op</th>
+		</tr>
+	</thead>
+	<tbody>
+		@if (Campaigns != null)
+		{
+			@foreach (var item in Campaigns)
+			{
+				<tr>
+					<th scope="row">@item.Title</th>
+					@if (!string.IsNullOrEmpty(item.MailChimpId) && ReportsPerCampaign != null && ReportsPerCampaign.ContainsKey(item.MailChimpId) && !ReportsPerCampaign[item.MailChimpId].Error)
+					{
+
+						<td>@ReportsPerCampaign[item.MailChimpId].Clicks.ClicksTotal</td>
+						<td>@ReportsPerCampaign[item.MailChimpId].Opens.OpensTotal</td>
+						<td>@ReportsPerCampaign[item.MailChimpId].EmailsSent</td>
+						<td>@DateTime.Parse(ReportsPerCampaign[item.MailChimpId].SentTime).ToString("dd/MM/yyyy HH:mm:ss")</td>
+
+					}
+					else if (string.IsNullOrEmpty(item.MailChimpId) || (ReportsPerCampaign.ContainsKey(item.MailChimpId) && ReportsPerCampaign[item.MailChimpId].Error))
+					{
+
+						<td>...</td>
+						<td>...</td>
+						<td>...</td>
+						<td>
+							<span>Data niet beschikbaar</span>
+						</td>
+					}
+					else
+					{
+						<td>...</td>
+						<td>...</td>
+						<td>...</td>
+						<td>
+							<div class="spinner-border text-primary" role="status">
+								<span class="sr-only">Loading...</span>
+							</div>
+						</td>
+					}
+				</tr>
+			}
+		}
+		else
+		{
+			<div class="spinner-border text-primary" role="status" style=" margin-left: 15px; margin-top:15px;">
+				<span class="sr-only">Loading...</span>
+			</div>
+		}
+	</tbody>
+</table>

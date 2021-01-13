@@ -1,172 +1,240 @@
 ﻿@page "/contacten"
+@using Bitmail.Models;
+@using Bitmail.Components
+@using Bitmail.Components.Buttons;
+@attribute [Authorize]
 
 <h3>Contacten</h3>
-
+<input class="form-control col-3" @bind-value="SearchTerm" @bind-value:event="oninput" placeholder="Zoeken..." />
+<hr>
 <div class="row">
-    <div class="col">
-        <input class="form-control col-3" @bind-value="SearchTerm" @bind-value:event="oninput" placeholder="Zoeken..." />
-        <div class="vertical-menu">
-            @foreach (var item in FilteredContacts)
+    <div class="col col-nav">
+        <div class="vertical-menu" style="height:660px; max-height:100%;">
+            @foreach (var item in FilteredContacts.OrderBy(c => (c != null) ? c.FirstName : ""))
             {
-                <a role="button" @onclick="@(()=> OnContactClicked(item) )">@item.FirstName @item.LastName </a>
+                <button type="button" style="width:100%; border-radius:0px;" class="btn btn-light vertical-menu-button" @onclick="@(()=> OnContactClicked(item) )">@item.FirstName @item.LastName</button><br />
             }
         </div>
+        <hr />
         <div class="content-nav-bottom">
             <button @onclick="OnNewContact" class="btn btn-primary">Nieuw contact aanmaken</button>
         </div>
     </div>
-    <div class="col">
+    <div class="col pl-4 ml-4">
         @if (IsNewContact)
         {
-            <h3>Nieuw contact</h3><br />
-            <EditForm Model="CurrentContact" OnSubmit="SaveContact">
-                <div class="align-content-lg-center row">
-                    <label class="col-2 font-weight-bold">Voornaam: </label>
-                    <InputText class="form-control col-3" @bind-Value="CurrentContact.FirstName" placeholder="Voornaam" />
+            <EditForm Model="CurrentContact" OnValidSubmit="SaveContact">
+                <div style="height:660px; max-height:100%;">
+                    <DataAnnotationsValidator />
+                    <b>Nieuw contact:</b><br />
+                    <b>Voornaam: </b><br /><InputText class="form-control editItemInput" placeholder="Voornaam" @bind-Value="CurrentContact.FirstName"></InputText>
+                    <ValidationMessage For="@(() => CurrentContact.FirstName)" />
+                    <b>Achternaam: </b><br /><InputText class="form-control editItemInput" placeholder="Achternaam" @bind-Value="CurrentContact.LastName"></InputText>
+                    <ValidationMessage For="@(() => CurrentContact.LastName)" />
+                    <b>E-mail: </b><br /><InputText class="form-control editItemInput" placeholder="E-mail" @bind-Value="CurrentContact.Email"></InputText>
+                    <ValidationMessage For="@(() => CurrentContact.Email)" />
+                    <div class="row">
+                        <div class="col-md">
+                            <b>Organisatie(s):</b>
+                            <SearchComponent Placeholder="Zoeken..." OnInput="OnOrganisationSearch"></SearchComponent>
+                            <div style="height: 360px; max-height:360px; overflow-y:auto; background-color:#eee;">
+                                @foreach (var item in Organisations.OrderBy(o => (o != null) ? o.Name : ""))
+                                {
+                                    <span style="cursor: pointer">
+                                        <a role="button" style="width:100%; border-radius:0px; text-align:left" class="btn btn-light" @onclick="@(() => OnOrganisationItemSelected(item.Id))">
+                                            @if (SelectedOrganisations != null && SelectedOrganisations.Contains(item.Id))
+                                            {
+                                                <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-check-circle" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                                                    <path fill-rule="evenodd" d="M8 15A7 7 0 1 0 8 1a7 7 0 0 0 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z" />
+                                                    <path fill-rule="evenodd" d="M10.97 4.97a.75.75 0 0 1 1.071 1.05l-3.992 4.99a.75.75 0 0 1-1.08.02L4.324 8.384a.75.75 0 1 1 1.06-1.06l2.094 2.093 3.473-4.425a.236.236 0 0 1 .02-.022z" />
+                                                </svg>
+                                            }
+                                            else
+                                            {
+                                                <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-circle" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                                                    <path fill-rule="evenodd" d="M8 15A7 7 0 1 0 8 1a7 7 0 0 0 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z" />
+                                                </svg>
+                                            }
+                                            <span class="pl-3">
+                                                @item.Name
+                                            </span>
+                                        </a><br />
+                                    </span>
+                                }
+                            </div>
+                        </div>
+                        <div class="col-md">
+                            <b>Label(s):</b>
+                            <SearchComponent Placeholder="Zoeken..." OnInput="OnTagSearch"></SearchComponent>
+                            <div style="height: 360px; max-height:360px; overflow-y:auto; background-color:#eee;">
+                                @foreach (var item in Tags.OrderBy(t => (t != null) ? t.Title : ""))
+                                {
+                                    <span style="cursor: pointer">
+                                        <a role="button" style="width:100%; border-radius:0px; text-align:left" class="btn btn-light" @onclick="@(() => OnTagItemSelected(item.Id))">
+                                            @if (SelectedTags != null && SelectedTags.Contains(item.Id))
+                                            {
+                                                <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-check-circle" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                                                    <path fill-rule="evenodd" d="M8 15A7 7 0 1 0 8 1a7 7 0 0 0 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z" />
+                                                    <path fill-rule="evenodd" d="M10.97 4.97a.75.75 0 0 1 1.071 1.05l-3.992 4.99a.75.75 0 0 1-1.08.02L4.324 8.384a.75.75 0 1 1 1.06-1.06l2.094 2.093 3.473-4.425a.236.236 0 0 1 .02-.022z" />
+                                                </svg>
+                                            }
+                                            else
+                                            {
+                                                <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-circle" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                                                    <path fill-rule="evenodd" d="M8 15A7 7 0 1 0 8 1a7 7 0 0 0 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z" />
+                                                </svg>
+                                            }
+                                            <span class="pl-3">
+                                                @item.Title
+                                            </span>
+                                        </a><br />
+                                    </span>
+                                }
+                            </div>
+                        </div>
+                    </div>
                 </div>
-                <br />
-                <div class="align-content-lg-center row">
-                    <label class="col-2 font-weight-bold">Achternaam: </label>
-                    <InputText class="form-control col-3" @bind-Value="CurrentContact.LastName" placeholder="Achternaam" />
-                </div>
-                <br />
-                <div class="align-content-lg-center row">
-                    <label class="col-2 font-weight-bold">E-mail: </label>
-                    <InputText class="form-control col-3" @bind-Value="CurrentContact.Email" placeholder="E-mail adres" />
-                </div>
-                <br />
-                <b>Organisatie(s):</b>
-                <div style="height: 100px; overflow-y:auto">
-                    @foreach (var item in AllOrganisations)
-                    {
-
-                        @if (SelectedOrganisations != null && SelectedOrganisations.Contains(item.Id))
-                        {
-                            <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-check" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
-                                <path fill-rule="evenodd" d="M10.97 4.97a.75.75 0 0 1 1.071 1.05l-3.992 4.99a.75.75 0 0 1-1.08.02L4.324 8.384a.75.75 0 1 1 1.06-1.06l2.094 2.093 3.473-4.425a.236.236 0 0 1 .02-.022z" />
-                            </svg>
-                        }
-
-                        <a role="button" @onclick="@(()=> OnOrganisationItemSelected(item.Id) )">@item.Name</a><br />
-                    }
-                </div>
-                <br />
-                <b>Label(s):</b>
-                <div style="height: 100px; overflow-y:auto">
-                    @foreach (var item in AllTags)
-                    {
-
-                        @if (SelectedTags != null && SelectedTags.Contains(item.Id))
-                        {
-                            <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-check" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
-                                <path fill-rule="evenodd" d="M10.97 4.97a.75.75 0 0 1 1.071 1.05l-3.992 4.99a.75.75 0 0 1-1.08.02L4.324 8.384a.75.75 0 1 1 1.06-1.06l2.094 2.093 3.473-4.425a.236.236 0 0 1 .02-.022z" />
-                            </svg>
-                        }
-
-                        <a role="button" @onclick="@(()=> OnTagItemSelected(item.Id) )">@item.Title</a><br />
-                    }
-                </div>
-                <br />
-                <div class="content-nav-bottom">
-                    <button type="submit" class="btn btn-primary">Opslaan</button>
-                </div>
+                <hr />
+                <PrimaryButton Type="submit"> Opslaan </PrimaryButton>
+                <DangerButton OnClick="@(() => OnContactClicked(CurrentContact))">Annuleer</DangerButton>
             </EditForm>
         }
         else
         {
             @if (CurrentContact.Email != null && !EditClicked)
             {
-                <h3>Contact informatie</h3><br />
-                <b>Voornaam:</b> @CurrentContact.FirstName<br /><br />
-                <b>Achternaam:</b> @CurrentContact.LastName<br /><br />
-                <b>Email:</b> @CurrentContact.Email<br /><br />
-                <b>ID:</b> @CurrentContact.Id<br /><br />
-                @if (CurrentContact.OrganisationContacts.Count != 0)
-                {
-                    <b>Organisaties: </b>
-                    <div style="height: 100px; overflow-y:auto">
-                        @foreach (var co in CurrentContact.OrganisationContacts)
+    <div style="height:660px; max-height:100%;">
+        <b>Bekijk contact:</b><br />
+
+        <b>Voornaam: </b><br /><input class="form-control editItemInput disabled" value="@CurrentContact.FirstName" placeholder="Voornaam" disabled />
+        
+        <b>Achternaam: </b><br /><input class="form-control editItemInput disabled" value="@CurrentContact.LastName" placeholder="Achternaam" disabled />
+
+        <b>E-Mail: </b><br /><input class="form-control editItemInput disabled" value="@CurrentContact.Email" placeholder="E-Mail" disabled />
+
+        <div class="row">
+            <div class="col-md">
+                <b>Organisatie(s):</b>
+
+                <div style="height: 400px; max-height:400px; overflow-y:auto; background-color:#eee;">
+                    @foreach (var item in CurrentContact.OrganisationContacts.OrderBy(ct => (ct.Organisation != null) ? ct.Organisation.Name : ""))
+                    {
+                        @if (item.Organisation != null)
                         {
-                            <span> @co.Organisation.Name  </span><br />
+                            <span style="cursor: pointer">
+                                <a role="button" style="width:100%; border-radius:0px; text-align:left" class="btn btn-light">
+                                    <span class="pl-3">
+                                        @item.Organisation.Name
+                                    </span>
+                                </a><br />
+                            </span>
                         }
-                    </div>
-                }
-                @if (CurrentContact.ContactTags.Count != 0)
-                {
-                    <b>Labels: </b>
-                    <div style="height: 100px; overflow-y:auto">
-                        @foreach (var ct in CurrentContact.ContactTags)
+                    }
+                </div>
+            </div>
+            <div class="col-md">
+                <b>Label(s):</b>
+                <div style="height: 400px; max-height:400px; overflow-y:auto; background-color:#eee;">
+                    @foreach (var item in CurrentContact.ContactTags.OrderBy(ct => (ct.Tag != null) ? ct.Tag.Title : ""))
+                    {
+                        @if (item.Tag != null)
                         {
-                            <span> @ct.Tag.Title  </span><br />
+                            <span style="cursor: pointer">
+                                <a role="button" style="width:100%; border-radius:0px; text-align:left" class="btn btn-light">
+                                    <span class="pl-3">
+                                        @item.Tag.Title
+                                    </span>
+                                </a><br />
+                            </span>
                         }
-                    </div>
-                }
-                <span class="content-nav-bottom">
-                    <button @onclick="RemoveContact" class="btn btn-primary"> Verwijderen </button>
-                </span>
-                <span class="content-nav-bottom">
-                    <button @onclick="OnEditClicked" class="btn btn-primary"> Wijzigen </button>
-                </span>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+                <hr />
+                <PrimaryButton OnClick="OnEditClicked">Wijzig Contact</PrimaryButton>
+                <DangerButton OnClick="RemoveContact">Verwijder Contact</DangerButton>
             }
             @if (EditClicked)
             {
-                <h3>Wijzig contact</h3><br />
-                <EditForm Model="CurrentContact" OnSubmit="EditContact">
-                    <div class="align-content-lg-center row">
-                        <label class="col-2 font-weight-bold">Voornaam: </label>
-                        <InputText class="form-control col-3" @bind-Value="CurrentContact.FirstName" placeholder="Voornaam" />
-                    </div>
-                    <br />
-                    <div class="align-content-lg-center row">
-                        <label class="col-2 font-weight-bold">Achternaam: </label>
-                        <InputText class="form-control col-3" @bind-Value="CurrentContact.LastName" placeholder="Achternaam" />
-                    </div>
-                    <br />
-                    <div class="align-content-lg-center row">
-                        <label class="col-2 font-weight-bold">E-mail: </label>
-                        <InputText class="form-control col-3" @bind-Value="CurrentContact.Email" placeholder="E-mail adres" />
-                    </div>
-                    <br />
-                    <b>Organisaties:</b>
-                    <div style="height: 100px; overflow-y:auto">
-                        @foreach (var item in AllOrganisations)
-                        {
+                <EditForm Model="CurrentContact" OnValidSubmit="EditContact">
+                    <div style="height:660px; max-height:100%;">
+                        <b>Wijzig contact:</b><br />
+                        <DataAnnotationsValidator />
+                        <b>Voornaam: </b><br /><InputText class="form-control editItemInput" placeholder="Voornaam" @bind-Value="CurrentContact.FirstName"></InputText>
+                        <ValidationMessage For="@(() => CurrentContact.FirstName)" />
+                        <b>Achternaam: </b><br /><InputText class="form-control editItemInput" placeholder="Achternaam" @bind-Value="CurrentContact.LastName"></InputText>
+                        <ValidationMessage For="@(() => CurrentContact.LastName)" />
+                        <b>E-Mail: </b><br /><InputText class="form-control editItemInput" placeholder="E-Mail" @bind-Value="CurrentContact.Email"></InputText>
+                        <ValidationMessage For="@(() => CurrentContact.Email)" />
 
-                            @if (SelectedOrganisations != null && SelectedOrganisations.Contains(item.Id))
-                            {
-                                <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-check" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
-                                    <path fill-rule="evenodd" d="M10.97 4.97a.75.75 0 0 1 1.071 1.05l-3.992 4.99a.75.75 0 0 1-1.08.02L4.324 8.384a.75.75 0 1 1 1.06-1.06l2.094 2.093 3.473-4.425a.236.236 0 0 1 .02-.022z" />
-                                </svg>
-                            }
-
-                            <a role="button" @onclick="@(()=> OnOrganisationItemSelected(item.Id) )">@item.Name</a><br />
-                        }
+                        <div class="row">
+                            <div class="col-md">
+                                <b>Organisatie(s):</b>
+                                <SearchComponent Placeholder="Zoeken..." OnInput="OnOrganisationSearch"></SearchComponent>
+                                <div style="height: 360px; max-height:360px; overflow-y:auto; background-color:#eee;">
+                                    @foreach (var item in Organisations.OrderBy(o => (o != null) ? o.Name : ""))
+                                    {
+                                        <span style="cursor: pointer">
+                                            <a role="button" style="width:100%; border-radius:0px; text-align:left" class="btn btn-light" @onclick="@(() => OnOrganisationItemSelected(item.Id))">
+                                                @if (SelectedOrganisations != null && SelectedOrganisations.Contains(item.Id))
+                                                {
+                                                    <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-check-circle" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                                                        <path fill-rule="evenodd" d="M8 15A7 7 0 1 0 8 1a7 7 0 0 0 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z" />
+                                                        <path fill-rule="evenodd" d="M10.97 4.97a.75.75 0 0 1 1.071 1.05l-3.992 4.99a.75.75 0 0 1-1.08.02L4.324 8.384a.75.75 0 1 1 1.06-1.06l2.094 2.093 3.473-4.425a.236.236 0 0 1 .02-.022z" />
+                                                    </svg>
+                                                }
+                                                else
+                                                {
+                                                    <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-circle" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                                                        <path fill-rule="evenodd" d="M8 15A7 7 0 1 0 8 1a7 7 0 0 0 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z" />
+                                                    </svg>
+                                                }
+                                                <span class="pl-3">
+                                                    @item.Name
+                                                </span>
+                                            </a><br />
+                                        </span>
+                                    }
+                                </div>
+                            </div>
+                            <div class="col-md">
+                                <b>Label(s):</b>
+                                <SearchComponent Placeholder="Zoeken..." OnInput="OnTagSearch"></SearchComponent>
+                                <div style="height: 360px; max-height:360px; overflow-y:auto; background-color:#eee;">
+                                    @foreach (var item in Tags.OrderBy(t => (t != null) ? t.Title : ""))
+                                    {
+                                        <span style="cursor: pointer">
+                                            <a role="button" style="width:100%; border-radius:0px; text-align:left" class="btn btn-light" @onclick="@(() => OnTagItemSelected(item.Id))">
+                                                @if (SelectedTags != null && SelectedTags.Contains(item.Id))
+                                                {
+                                                    <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-check-circle" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                                                        <path fill-rule="evenodd" d="M8 15A7 7 0 1 0 8 1a7 7 0 0 0 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z" />
+                                                        <path fill-rule="evenodd" d="M10.97 4.97a.75.75 0 0 1 1.071 1.05l-3.992 4.99a.75.75 0 0 1-1.08.02L4.324 8.384a.75.75 0 1 1 1.06-1.06l2.094 2.093 3.473-4.425a.236.236 0 0 1 .02-.022z" />
+                                                    </svg>
+                                                }
+                                                else
+                                                {
+                                                    <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-circle" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                                                        <path fill-rule="evenodd" d="M8 15A7 7 0 1 0 8 1a7 7 0 0 0 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z" />
+                                                    </svg>
+                                                }
+                                                <span class="pl-3">
+                                                    @item.Title
+                                                </span>
+                                            </a><br />
+                                        </span>
+                                    }
+                                </div>
+                            </div>
+                        </div>
                     </div>
-                    <br />
-                    <b>Labels:</b>
-                    <div style="height: 100px; overflow-y:auto">
-                        @foreach (var item in AllTags)
-                        {
-
-                            @if (SelectedTags != null && SelectedTags.Contains(item.Id))
-                            {
-                                <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-check" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
-                                    <path fill-rule="evenodd" d="M10.97 4.97a.75.75 0 0 1 1.071 1.05l-3.992 4.99a.75.75 0 0 1-1.08.02L4.324 8.384a.75.75 0 1 1 1.06-1.06l2.094 2.093 3.473-4.425a.236.236 0 0 1 .02-.022z" />
-                                </svg>
-                            }
-
-                            <a role="button" @onclick="@(()=> OnTagItemSelected(item.Id) )">@item.Title</a><br />
-                        }
-                    </div>
-                    <br />
-                    <div class="content-nav-bottom">
-                        <button type="submit" class="btn btn-primary">Opslaan</button>
-                    </div>
+                    <hr />
+                    <PrimaryButton Type="submit">Opslaan</PrimaryButton>
+                    <DangerButton OnClick="@(() => OnContactClicked(CurrentContact))">Annuleer</DangerButton>
                 </EditForm>
             }
         }
     </div>
 </div>
-
-
-
