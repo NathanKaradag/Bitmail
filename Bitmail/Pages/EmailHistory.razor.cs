@@ -17,6 +17,7 @@ namespace Bitmail.Pages
 		private List<CampaignHistory> Campaigns { get; set; }
 		private List<CampaignHistory> AllCampaigns { get; set; }
 		[Parameter] public string Id { get; set; }
+
 		protected override async Task OnInitializedAsync()
 		{
 			await DatabaseService.DB.Campaigns.ToListAsync();
@@ -24,15 +25,19 @@ namespace Bitmail.Pages
 			await DatabaseService.DB.ContactTags.ToListAsync();
 			await DatabaseService.DB.Contacts.ToListAsync();
 
-			AllCampaigns = await DatabaseService.DB.CampaignHistory.OrderByDescending(ch=>ch.Date).ToListAsync();
+			AllCampaigns = await DatabaseService.DB.CampaignHistory.OrderByDescending(ch => ch.Date).ToListAsync();
 			Campaigns = AllCampaigns;
 			if (!string.IsNullOrEmpty(Id))
 			{
 				var idInt = Convert.ToInt32(Id);
 				var selectedCampaign = AllCampaigns.FirstOrDefault(c => c.Id == idInt);
-				await OnCampaignClicked(selectedCampaign);
+				if (selectedCampaign != null)
+				{
+					await OnCampaignClicked(selectedCampaign);
+				}
 			}
 		}
+
 		protected void OnSearch(object value)
 		{
 			if (value != null && !string.IsNullOrEmpty(value.ToString()))
@@ -47,6 +52,7 @@ namespace Bitmail.Pages
 
 			StateHasChanged();
 		}
+
 		private async Task OnCampaignClicked(CampaignHistory item)
 		{
 			Regex rRemScript = new Regex(@"<script[^>]*>[\s\S]*?</script>");
