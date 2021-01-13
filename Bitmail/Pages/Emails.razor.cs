@@ -107,6 +107,7 @@ namespace Bitmail.Pages
 			}
 			if (item != null)
 			{
+				CurrentCampaignStatus = CampaignStatus.Editting;
 				CurrentCampaign = item;
 				SelectedTags = new List<int>();
 				foreach (var tag in CurrentCampaign.CampaignTags)
@@ -132,7 +133,7 @@ namespace Bitmail.Pages
 					NavigationManager.NavigateTo($"/emails/manage/{item.Id}");
 				}
 			}
-			CurrentCampaignStatus = CampaignStatus.Editting;
+
 			StateHasChanged();
 		}
 
@@ -350,7 +351,6 @@ namespace Bitmail.Pages
 
 		private void OnTagItemSelected(int id)
 		{
-
 			if (SelectedTags == null)
 			{
 				SelectedTags = new List<int>();
