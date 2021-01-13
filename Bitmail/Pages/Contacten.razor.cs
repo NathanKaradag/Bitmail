@@ -33,7 +33,6 @@ namespace Bitmail.Pages
         protected bool EditClicked { get; set; }
         protected string SearchTerm { get; set; } = "";
         protected List<Contact> FilteredContacts => AllContacts.Where(i => (i.FirstName + " " + i.LastName).ToLower().Contains(SearchTerm.ToLower())).ToList();
-        protected List<Contact> EveryContact { get; set; }
         protected Contact ImportantContact { get; set; }
         protected List<Tag> tagsFiltered { get; set; }
 
@@ -74,7 +73,6 @@ namespace Bitmail.Pages
 
             await ContactInMailchimp("subscribed");
             AllContacts = DatabaseService.DB.Contacts.Include(t => t.OrganisationContacts).Include(x => x.ContactTags).ToList();
-            EveryContact = DatabaseService.DB.Contacts.Include(t => t.OrganisationContacts).Include(x => x.ContactTags).ToList();
             CurrentContact = new Contact();
             StateHasChanged();
 
@@ -263,7 +261,7 @@ namespace Bitmail.Pages
 
             var listId = configuration.GetValue<string>("MailChimpConstants:SubscriberListId");
 
-            foreach (var cont in EveryContact)
+            foreach (var cont in AllContacts)
             {
                 if (CurrentContact.Id == cont.Id)
                 {
