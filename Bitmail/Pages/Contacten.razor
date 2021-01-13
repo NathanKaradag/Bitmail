@@ -23,16 +23,16 @@
     <div class="col pl-4 ml-4">
         @if (IsNewContact)
         {
-            <EditForm Model="CurrentContact" OnSubmit="SaveContact">
+            <EditForm Model="CurrentContact" OnValidSubmit="SaveContact">
                 <div style="height:660px; max-height:100%;">
                     <DataAnnotationsValidator />
                     <b>Nieuw contact:</b><br />
                     <b>Voornaam: </b><br /><InputText class="form-control editItemInput" placeholder="Voornaam" @bind-Value="CurrentContact.FirstName"></InputText>
                     <ValidationMessage For="@(() => CurrentContact.FirstName)" />
-                    <b>Acgrernaam: </b><br /><InputText class="form-control editItemInput" placeholder="Voornaam" @bind-Value="CurrentContact.LastName"></InputText>
-                    <ValidationMessage For="@(() => CurrentContact.FirstName)" />
+                    <b>Achternaam: </b><br /><InputText class="form-control editItemInput" placeholder="Achternaam" @bind-Value="CurrentContact.LastName"></InputText>
+                    <ValidationMessage For="@(() => CurrentContact.LastName)" />
                     <b>E-mail: </b><br /><InputText class="form-control editItemInput" placeholder="E-mail" @bind-Value="CurrentContact.Email"></InputText>
-                    <ValidationMessage For="@(() => CurrentContact.FirstName)" />
+                    <ValidationMessage For="@(() => CurrentContact.Email)" />
                     <div class="row">
                         <div class="col-md">
                             <b>Organisatie(s):</b>
@@ -103,62 +103,62 @@
         {
             @if (CurrentContact.Email != null && !EditClicked)
             {
-                <div style="height:660px; max-height:100%;">
-                    <b>Bekijk contact:</b><br />
+    <div style="height:660px; max-height:100%;">
+        <b>Bekijk contact:</b><br />
 
-                    <b>Voornaam: </b><br /><input class="form-control editItemInput disabled" value="@CurrentContact.FirstName" placeholder="Voornaam" disabled />
+        <b>Voornaam: </b><br /><input class="form-control editItemInput disabled" value="@CurrentContact.FirstName" placeholder="Voornaam" disabled />
+        
+        <b>Achternaam: </b><br /><input class="form-control editItemInput disabled" value="@CurrentContact.LastName" placeholder="Achternaam" disabled />
 
-                    <b>Achternaam: </b><br /><input class="form-control editItemInput disabled" value="@CurrentContact.LastName" placeholder="Achternaam" disabled />
+        <b>E-Mail: </b><br /><input class="form-control editItemInput disabled" value="@CurrentContact.Email" placeholder="E-Mail" disabled />
 
-                    <b>E-Mail: </b><br /><input class="form-control editItemInput disabled" value="@CurrentContact.Email" placeholder="E-Mail" disabled />
+        <div class="row">
+            <div class="col-md">
+                <b>Organisatie(s):</b>
 
-                    <div class="row">
-                        <div class="col-md">
-                            <b>Organisatie(s):</b>
-
-                            <div style="height: 400px; max-height:400px; overflow-y:auto; background-color:#eee;">
-                                @foreach (var item in CurrentContact.OrganisationContacts.OrderBy(ct => (ct.Organisation != null) ? ct.Organisation.Name : ""))
-                                {
-                                    @if (item.Organisation != null)
-                                    {
-                                        <span style="cursor: pointer">
-                                            <a role="button" style="width:100%; border-radius:0px; text-align:left" class="btn btn-light">
-                                                <span class="pl-3">
-                                                    @item.Organisation.Name
-                                                </span>
-                                            </a><br />
-                                        </span>
-                                    }
-                                }
-                            </div>
-                        </div>
-                        <div class="col-md">
-                            <b>Label(s):</b>
-                            <div style="height: 400px; max-height:400px; overflow-y:auto; background-color:#eee;">
-                                @foreach (var item in CurrentContact.ContactTags.OrderBy(ct=>(ct.Tag != null)?ct.Tag.Title:""))
-                                {
-                                    @if (item.Tag != null)
-                                    {
-                                        <span style="cursor: pointer">
-                                            <a role="button" style="width:100%; border-radius:0px; text-align:left" class="btn btn-light">
-                                                <span class="pl-3">
-                                                    @item.Tag.Title
-                                                </span>
-                                            </a><br />
-                                        </span>
-                                    }
-                                }
-                            </div>
-                        </div>
-                    </div>
+                <div style="height: 400px; max-height:400px; overflow-y:auto; background-color:#eee;">
+                    @foreach (var item in CurrentContact.OrganisationContacts.OrderBy(ct => (ct.Organisation != null) ? ct.Organisation.Name : ""))
+                    {
+                        @if (item.Organisation != null)
+                        {
+                            <span style="cursor: pointer">
+                                <a role="button" style="width:100%; border-radius:0px; text-align:left" class="btn btn-light">
+                                    <span class="pl-3">
+                                        @item.Organisation.Name
+                                    </span>
+                                </a><br />
+                            </span>
+                        }
+                    }
                 </div>
+            </div>
+            <div class="col-md">
+                <b>Label(s):</b>
+                <div style="height: 400px; max-height:400px; overflow-y:auto; background-color:#eee;">
+                    @foreach (var item in CurrentContact.ContactTags.OrderBy(ct => (ct.Tag != null) ? ct.Tag.Title : ""))
+                    {
+                        @if (item.Tag != null)
+                        {
+                            <span style="cursor: pointer">
+                                <a role="button" style="width:100%; border-radius:0px; text-align:left" class="btn btn-light">
+                                    <span class="pl-3">
+                                        @item.Tag.Title
+                                    </span>
+                                </a><br />
+                            </span>
+                        }
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
                 <hr />
                 <PrimaryButton OnClick="OnEditClicked">Wijzig Contact</PrimaryButton>
                 <DangerButton OnClick="RemoveContact">Verwijder Contact</DangerButton>
             }
             @if (EditClicked)
             {
-                <EditForm Model="CurrentContact" OnSubmit="EditContact">
+                <EditForm Model="CurrentContact" OnValidSubmit="EditContact">
                     <div style="height:660px; max-height:100%;">
                         <b>Wijzig contact:</b><br />
                         <DataAnnotationsValidator />

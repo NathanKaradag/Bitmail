@@ -57,6 +57,10 @@ namespace Bitmail.Pages
             EditClicked = false;
             CurrentOrganisation = selectedOrganisation;
             SelectedContacts = new List<int>();
+            for (int i = 0; i < CurrentOrganisation.OrganisationContacts.Count; i++)
+            {
+                SelectedContacts.Add(CurrentOrganisation.OrganisationContacts[i].ContactId);
+            }
         }
         protected void OnNewOrganisation()
         {

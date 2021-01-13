@@ -79,11 +79,23 @@ namespace Bitmail.Pages
         }
         protected void OnContactClicked(Contact SelectedContact)
         {
+            if (CurrentContact != null)
+            {
+                DatabaseService.DB.Entry(CurrentContact).Reload();
+            }
             IsNewContact = false;
             EditClicked = false;
             CurrentContact = SelectedContact;
             SelectedOrganisations = new List<int>();
             SelectedTags = new List<int>();
+            for (int i = 0; i < CurrentContact.OrganisationContacts.Count; i++)
+            {
+                SelectedOrganisations.Add(CurrentContact.OrganisationContacts[i].OrganisationId);
+            }
+            for (int i = 0; i < CurrentContact.ContactTags.Count; i++)
+            {
+                SelectedTags.Add(CurrentContact.ContactTags[i].TagId);
+            }
         }
         protected void OnNewContact()
         {

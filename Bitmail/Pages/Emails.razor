@@ -52,24 +52,30 @@
 
 		@if (CurrentCampaign != null)
 		{
-			<EditForm Model="CurrentCampaign" OnSubmit="@(() => _ = SaveCampaignAndSend())">
+			<EditForm Model="CurrentCampaign" OnValidSubmit="@(() => _ = SaveCampaignAndSend())">
 				<div style="height:660px; max-height:100%;    overflow-y: auto; overflow-x: hidden;">
-					<div class="row">
-						<div class="col" style="max-width: 200px;">
-							<div class="editItem">Titel:</div>
-							<div class="editItem">Onderwerp:</div>
-							<div class="editItem">Voorbeeldtekst:</div>
-							<div class="editItem">Afzender:</div>
-							<div class="editItem">Antwoord adres:</div>
-						</div>
-						<div class="col">
-							<InputText class="form-control editItemInput" placeholder="Title" @bind-Value="CurrentCampaign.Title" />
-							<InputText class="form-control editItemInput" placeholder="Onderwerp" @bind-Value="CurrentCampaign.SubjectLine" />
-							<InputText class="form-control editItemInput" placeholder="Voorbeeldtekst" @bind-Value="CurrentCampaign.PreviewText" />
-							<InputText class="form-control editItemInput" placeholder="Afzender" @bind-Value="CurrentCampaign.FromName" />
-							<InputText class="form-control editItemInput" placeholder="Antwoord adres" @bind-Value="CurrentCampaign.ReplyTo" />
-						</div>
-					</div>
+                    <div class="row">
+                        <DataAnnotationsValidator />
+                        <div class="col" style="max-width: 200px;">
+                            <div class="editItem">Titel:</div>
+                            <div class="editItem">Onderwerp:</div>
+                            <div class="editItem">Voorbeeldtekst:</div>
+                            <div class="editItem">Afzender:</div>
+                            <div class="editItem">Antwoord adres:</div>
+                        </div>
+                        <div class="col">
+                            <InputText class="form-control editItemInput" placeholder="Title" @bind-Value="CurrentCampaign.Title" />
+                            <ValidationMessage For="@(() => CurrentCampaign.Title)" />
+                            <InputText class="form-control editItemInput" placeholder="Onderwerp" @bind-Value="CurrentCampaign.SubjectLine" />
+                            <ValidationMessage For="@(() => CurrentCampaign.SubjectLine)" />
+                            <InputText class="form-control editItemInput" placeholder="Voorbeeldtekst" @bind-Value="CurrentCampaign.PreviewText" />
+                            <ValidationMessage For="@(() => CurrentCampaign.PreviewText)" />
+                            <InputText class="form-control editItemInput" placeholder="Afzender" @bind-Value="CurrentCampaign.FromName" />
+                            <ValidationMessage For="@(() => CurrentCampaign.FromName)" />
+                            <InputText class="form-control editItemInput" placeholder="Antwoord adres" @bind-Value="CurrentCampaign.ReplyTo" />
+                            <ValidationMessage For="@(() => CurrentCampaign.ReplyTo)" />
+                        </div>
+                    </div>
 					<div class="row editRow">
 						<div class="col" style="max-width: 200px;">
 							<div class="editItem">Labels:</div>

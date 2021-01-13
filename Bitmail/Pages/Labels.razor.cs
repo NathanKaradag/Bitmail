@@ -64,6 +64,10 @@ namespace Bitmail.Pages
             EditClicked = false;
             CurrentTag = selectedTag;
             SelectedContacts = new List<int>();
+            for (int i = 0; i < CurrentTag.ContactTags.Count; i++)
+            {
+                SelectedContacts.Add(CurrentTag.ContactTags[i].ContactId);
+            }
         }
         protected void OnNewTag()
         {
