@@ -23,6 +23,15 @@ namespace Bitmail.Pages
 {
 	public partial class Emails
 	{
+		public enum CampaignStatus
+		{
+			None,
+			New,
+			Editting,
+			Saved,
+			Sending
+		}
+
 		public enum SendingStatus
 		{
 			Done,
@@ -44,10 +53,6 @@ namespace Bitmail.Pages
 		private List<Campaign> Campaigns { get; set; }
 		private List<Campaign> AllCampaigns { get; set; }
 		private Template SelectedTemplate { get; set; }
-		private bool IsNewCampaign { get; set; }
-		private bool SetupSending { get; set; }
-		private bool TagsChanged { get; set; }
-		private bool Editing { get; set; }
 		private Campaign CurrentCampaign { get; set; }
 		private List<Tag> AllTags { get; set; }
 		private List<int> SelectedTags { get; set; }
@@ -56,6 +61,7 @@ namespace Bitmail.Pages
 		protected SendingStatus EmailStatus { get; set; }
 		protected string SendMessage { get; set; }
 		protected int? LastId { get; set; }
+		protected CampaignStatus CurrentCampaignStatus { get; set; }
 
 		protected async Task GetData()
 		{
@@ -68,10 +74,11 @@ namespace Bitmail.Pages
 
 		protected override async Task OnInitializedAsync()
 		{
+			CurrentCampaignStatus = CampaignStatus.None;
 			await GetData();
 			if (NavigationManager.Uri.ToLower().Contains("send"))
 			{
-				SetupSending = true;
+				CurrentCampaignStatus = CampaignStatus.Saved;
 			}
 
 			TemplatesResponse templatesResponse =
@@ -82,15 +89,17 @@ namespace Bitmail.Pages
 				var idInt = Convert.ToInt32(Id);
 				var selectedCampaign = Campaigns.FirstOrDefault(c => c.Id == idInt);
 				await OnCampaignClicked(selectedCampaign, fromUrl: true);
+				CurrentCampaignStatus = CampaignStatus.Editting;
+			}
+			if (Id == "new")
+			{
+				CurrentCampaignStatus = CampaignStatus.New;
 			}
 		}
 
 		private async Task OnCampaignClicked(Campaign item, bool fromUrl = false)
 		{
-			IsNewCampaign = false;
-			SetupSending = false;
-			Editing = true;
-			TagsChanged = false;
+			Message = null;
 			//reset the changes done to currentCampaign
 			if (CurrentCampaign != null)
 			{
@@ -98,8 +107,8 @@ namespace Bitmail.Pages
 			}
 			if (item != null)
 			{
+				CurrentCampaignStatus = CampaignStatus.Editting;
 				CurrentCampaign = item;
-				Editing = true;
 				SelectedTags = new List<int>();
 				foreach (var tag in CurrentCampaign.CampaignTags)
 				{
@@ -124,15 +133,14 @@ namespace Bitmail.Pages
 					NavigationManager.NavigateTo($"/emails/manage/{item.Id}");
 				}
 			}
+
 			StateHasChanged();
 		}
 
 		private async Task OnNewCampaign()
 		{
 			NavigationManager.NavigateTo($"/emails/manage/new");
-
-			IsNewCampaign = true;
-			TagsChanged = false;
+			CurrentCampaignStatus = CampaignStatus.New;
 			CurrentCampaign = new Campaign();
 			SelectedTags = new List<int>();
 			StateHasChanged();
@@ -140,15 +148,12 @@ namespace Bitmail.Pages
 
 		private async Task OnCancel()
 		{
-			SetupSending = false;
-			Editing = false;
-			TagsChanged = false;
 			//reset the changes done to currentCampaign
 			if (CurrentCampaign != null)
 			{
 				await DatabaseService.DB.Entry(CurrentCampaign).ReloadAsync();
 			}
-
+			CurrentCampaignStatus = CampaignStatus.None;
 			CurrentCampaign = null;
 			SelectedTags = new List<int>();
 			StateHasChanged();
@@ -156,139 +161,145 @@ namespace Bitmail.Pages
 
 		private async Task SaveCampaignAndSend()
 		{
-			if (IsNewCampaign)
+			if (CurrentCampaignStatus == CampaignStatus.New)
 			{
 				await SaveCampaign();
 			}
-			else
+			else if (CurrentCampaignStatus == CampaignStatus.Editting)
 			{
 				await EditCampaign();
 			}
+			CurrentCampaignStatus = CampaignStatus.Saved;
+			StateHasChanged();
 		}
 
 		protected async Task SendCampaign()
 		{
-			LastId = null;
-			EmailStatus = SendingStatus.Loading;
-			await SyncContacts();
-			NavigationManager.NavigateTo($"/emails/manage/{CurrentCampaign.Id}/send");
-			SetupSending = true;
-			SendMessage = null;
-			SendingCampaign = true;
-			StateHasChanged();
-			await EditCampaign();
-			CurrentCampaign.ListId = configuration.GetValue<string>("MailChimpConstants:SubscriberListId");
-			var campPostReq = CampaignConversion.ConvertToMailChimpCampaignPost(CurrentCampaign);
+			if (CurrentCampaignStatus == CampaignStatus.Saved)
+			{
+				CurrentCampaignStatus = CampaignStatus.Sending;
+				LastId = null;
+				EmailStatus = SendingStatus.Loading;
+				await SyncContacts();
+				NavigationManager.NavigateTo($"/emails/manage/{CurrentCampaign.Id}/send");
+				SendMessage = null;
+				SendingCampaign = true;
+				StateHasChanged();
+				await EditCampaign();
+				CurrentCampaign.ListId = configuration.GetValue<string>("MailChimpConstants:SubscriberListId");
+				var campPostReq = CampaignConversion.ConvertToMailChimpCampaignPost(CurrentCampaign);
 
-			if (campPostReq.Recipients.SegmentOpts == null)
-			{
-				campPostReq.Recipients.SegmentOpts = new SegmentOpts();
-			}
-			campPostReq.Recipients.SegmentOpts.Match = "all";
-			if (campPostReq.Recipients.SegmentOpts.Conditions == null)
-			{
-				campPostReq.Recipients.SegmentOpts.Conditions = new List<Condition>();
-			}
-			var response = await MailChimpService.Client.Request<ListSegmentsGetRequest, ListSegmentsResponse>(new ListSegmentsGetRequest(CurrentCampaign.ListId, "?count=1000"));
-			var segments = response.Segments;
-			foreach (var item in SelectedTags)
-			{
-				Segment seg = segments.FirstOrDefault(s => s.Name.ToLower() == AllTags.FirstOrDefault(at => at.Id == item).Title.ToLower());
-				if (seg != null)
+				if (campPostReq.Recipients.SegmentOpts == null)
 				{
-					Condition condition = new Condition()
-					{
-						ConditionType = "StaticSegment",
-						Field = "static_segment",
-						Operator = "static_is",
-						Value = seg.Id.ToString()
-					};
-
-					campPostReq.Recipients.SegmentOpts.Conditions.Add(condition);
+					campPostReq.Recipients.SegmentOpts = new SegmentOpts();
 				}
-			}
-			try
-			{
-				CampaignResponse res1 = await MailChimpService.Client.Request<CampaignNewPostRequest, CampaignResponse>(campPostReq);
-
-				CampaignContentResponse test = await MailChimpService.Client.Request<CampaignContentEditRequest, CampaignContentResponse>(
-				new CampaignContentEditRequest(res1.Id)
+				campPostReq.Recipients.SegmentOpts.Match = "all";
+				if (campPostReq.Recipients.SegmentOpts.Conditions == null)
 				{
-					Template = new CampaignTemplate()
-					{
-						Id = Convert.ToInt32(SelectedTemplate.Id),
-						Sections = Sections
-					}
-				});
-				await MailChimpService.Client.Request(new CampaignSendRequest(res1.Id));
-				var selectedtags = AllTags.Where(at => SelectedTags.Any(st => st == at.Id));
-				string contacts = "";
-				string tags = "";
-				foreach (var item in selectedtags)
+					campPostReq.Recipients.SegmentOpts.Conditions = new List<Condition>();
+				}
+				var response = await MailChimpService.Client.Request<ListSegmentsGetRequest, ListSegmentsResponse>(new ListSegmentsGetRequest(CurrentCampaign.ListId, "?count=1000"));
+				var segments = response.Segments;
+				foreach (var item in SelectedTags)
 				{
-					tags += $"{item.Title};";
-					foreach (var ct in item.ContactTags)
+					Segment seg = segments.FirstOrDefault(s => s.Name.ToLower() == AllTags.FirstOrDefault(at => at.Id == item).Title.ToLower());
+					if (seg != null)
 					{
-						if (ct != null && ct.Contact != null && !string.IsNullOrEmpty(ct.Contact.Email))
+						Condition condition = new Condition()
 						{
-							contacts += $"{ct.Contact.Email};";
+							ConditionType = "StaticSegment",
+							Field = "static_segment",
+							Operator = "static_is",
+							Value = seg.Id.ToString()
+						};
+
+						campPostReq.Recipients.SegmentOpts.Conditions.Add(condition);
+					}
+				}
+				try
+				{
+					CampaignResponse res1 = await MailChimpService.Client.Request<CampaignNewPostRequest, CampaignResponse>(campPostReq);
+
+					CampaignContentResponse test = await MailChimpService.Client.Request<CampaignContentEditRequest, CampaignContentResponse>(
+					new CampaignContentEditRequest(res1.Id)
+					{
+						Template = new CampaignTemplate()
+						{
+							Id = Convert.ToInt32(SelectedTemplate.Id),
+							Sections = Sections
+						}
+					});
+					await MailChimpService.Client.Request(new CampaignSendRequest(res1.Id));
+					var selectedtags = AllTags.Where(at => SelectedTags.Any(st => st == at.Id));
+					string contacts = "";
+					string tags = "";
+					foreach (var item in selectedtags)
+					{
+						tags += $"{item.Title};";
+						foreach (var ct in item.ContactTags)
+						{
+							if (ct != null && ct.Contact != null && !string.IsNullOrEmpty(ct.Contact.Email))
+							{
+								contacts += $"{ct.Contact.Email};";
+							}
 						}
 					}
+
+					var cmpgnHistory = new CampaignHistory() { MailChimpId = res1.Id, HTML = test.Html, Contacts = contacts, Tags = tags, Date = DateTime.UtcNow, Title = CurrentCampaign.Title, Description = CurrentCampaign.Description, SubjectLine = CurrentCampaign.SubjectLine };
+					DatabaseService.DB.CampaignHistory.Add(cmpgnHistory);
+
+					await SaveCampaign(update: true);
+					LastId = cmpgnHistory.Id;
+					SendMessage = "Email is verzonden";
+					EmailStatus = SendingStatus.Done;
 				}
+				catch (ResponseException responseException)
+				{
+					var message = responseException.ErrorResponse.Detail;
+					SendMessage = $"Email kon niet worden verzonden: {message}";
+					EmailStatus = SendingStatus.Error;
+				}
+				catch (UnknownResponseException unknownException)
+				{
+					var responseError = unknownException.ResponseMessage;
+					SendMessage = $"Email kon niet worden verzonden: {responseError.Content}";
+					EmailStatus = SendingStatus.Error;
+				}
+				CurrentCampaign = null;
+				SendingCampaign = false;
 
-				var cmpgnHistory = new CampaignHistory() { MailChimpId = res1.Id, HTML = test.Html, Contacts = contacts, Tags = tags, Date = DateTime.UtcNow, Title = CurrentCampaign.Title, Description = CurrentCampaign.Description, SubjectLine = CurrentCampaign.SubjectLine };
-				DatabaseService.DB.CampaignHistory.Add(cmpgnHistory);
-
-				await SaveCampaign(update: true);
-				LastId = cmpgnHistory.Id;
-				SendMessage = "Email is verzonden";
-				EmailStatus = SendingStatus.Done;
+				await GetData();
+				StateHasChanged();
 			}
-			catch (ResponseException responseException)
-			{
-				var message = responseException.ErrorResponse.Detail;
-				SendMessage = $"Email kon niet worden verzonden: {message}";
-				EmailStatus = SendingStatus.Error;
-			}
-			catch (UnknownResponseException unknownException)
-			{
-				var responseError = unknownException.ResponseMessage;
-				SendMessage = $"Email kon niet worden verzonden: {responseError.Content}";
-				EmailStatus = SendingStatus.Error;
-			}
-			CurrentCampaign = null;
-			IsNewCampaign = false;
-			Editing = false;
-			SendingCampaign = false;
-
-			await GetData();
-			StateHasChanged();
 		}
 
 		private async Task EditCampaign()
 		{
-			List<Tag> realTags = new List<Tag>();
-			foreach (var selectedTag in SelectedTags)
+			if (CurrentCampaignStatus == CampaignStatus.Editting)
 			{
-				if (CurrentCampaign.CampaignTags.All(ct => ct.TagId != selectedTag))
+				List<Tag> realTags = new List<Tag>();
+				foreach (var selectedTag in SelectedTags)
 				{
-					Tag exisitingTag = AllTags.FirstOrDefault(c => c.Id == selectedTag);
+					if (CurrentCampaign.CampaignTags.All(ct => ct.TagId != selectedTag))
+					{
+						Tag exisitingTag = AllTags.FirstOrDefault(c => c.Id == selectedTag);
 
-					realTags.Add(exisitingTag);
+						realTags.Add(exisitingTag);
+					}
 				}
+
+				List<CampaignTag> res = realTags.Select(rc => new CampaignTag()
+				{ Tag = rc, CampaignId = rc.Id, Campaign = CurrentCampaign }).ToList();
+				CurrentCampaign.CampaignTags.AddRange(res);
+				await DatabaseService.DB.SaveChangesAsync();
+
+				await GetData();
 			}
-
-			List<CampaignTag> res = realTags.Select(rc => new CampaignTag()
-			{ Tag = rc, CampaignId = rc.Id, Campaign = CurrentCampaign }).ToList();
-			CurrentCampaign.CampaignTags.AddRange(res);
-			await DatabaseService.DB.SaveChangesAsync();
-
-			await GetData();
 		}
 
 		protected void OnCancelEdit()
 		{
-			Editing = false;
+			CurrentCampaignStatus = CampaignStatus.None;
 			//reset the changes done to currentCampaign
 			DatabaseService.DB.Entry(CurrentCampaign).Reload();
 			SelectedTags = new List<int>();
@@ -312,33 +323,34 @@ namespace Bitmail.Pages
 
 		private async Task SaveCampaign(bool update = false)
 		{
-			if (!update)
+			if (CurrentCampaignStatus == CampaignStatus.New || CurrentCampaignStatus == CampaignStatus.Editting)
 			{
-				DatabaseService.DB.Campaigns.Add(CurrentCampaign);
+				if (CurrentCampaignStatus == CampaignStatus.New)
+				{
+					DatabaseService.DB.Campaigns.Add(CurrentCampaign);
+				}
+				List<Tag> realTags = new List<Tag>();
+				foreach (var selectedTag in SelectedTags)
+				{
+					Tag exisitingTag = AllTags.FirstOrDefault(c => c.Id == selectedTag);
+					realTags.Add(exisitingTag);
+				}
+
+				List<CampaignTag> res = realTags.Select(rc => new CampaignTag()
+				{ Tag = rc, CampaignId = rc.Id, Campaign = CurrentCampaign }).ToList();
+				CurrentCampaign.CampaignTags = res;
+				CurrentCampaign.Date = DateTime.UtcNow;
+				await DatabaseService.DB.SaveChangesAsync();
+
+				await GetData();
+				CurrentCampaign = null;
+
+				StateHasChanged();
 			}
-			List<Tag> realTags = new List<Tag>();
-			foreach (var selectedTag in SelectedTags)
-			{
-				Tag exisitingTag = AllTags.FirstOrDefault(c => c.Id == selectedTag);
-				realTags.Add(exisitingTag);
-			}
-
-			List<CampaignTag> res = realTags.Select(rc => new CampaignTag()
-			{ Tag = rc, CampaignId = rc.Id, Campaign = CurrentCampaign }).ToList();
-			CurrentCampaign.CampaignTags = res;
-			CurrentCampaign.Date = DateTime.UtcNow;
-			await DatabaseService.DB.SaveChangesAsync();
-
-			await GetData();
-			CurrentCampaign = null;
-			IsNewCampaign = false;
-
-			StateHasChanged();
 		}
 
 		private void OnTagItemSelected(int id)
 		{
-			TagsChanged = true;
 			if (SelectedTags == null)
 			{
 				SelectedTags = new List<int>();
@@ -356,13 +368,13 @@ namespace Bitmail.Pages
 			StateHasChanged();
 		}
 
-		private void RemoveTag()
+		private async Task RemoveCampaign()
 		{
 			DatabaseService.DB.Campaigns.Remove(CurrentCampaign);
 			DatabaseService.DB.SaveChanges();
 			CurrentCampaign = new Campaign();
-			IsNewCampaign = true;
-			_ = GetData();
+			CurrentCampaignStatus = CampaignStatus.None;
+			await GetData();
 			StateHasChanged();
 		}
 
